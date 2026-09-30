@@ -265,7 +265,7 @@ body.on-course .course-hint { color: #2f6b2a; animation: pulse 1.4s ease-in-out 
   background-image: var(--noise), radial-gradient(ellipse, transparent 55%, rgba(120, 75, 25, .45) 100%);
   border-radius: 6px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, .45);
-  animation: unroll .45s cubic-bezier(.2, .9, .3, 1.2);
+  animation: unroll .45s cubic-bezier(.25, 1, .5, 1);
 }
 @keyframes unroll { from { transform: scaleY(.2) translateY(40px); opacity: 0; } }
 .scroll-card h2 { font-size: 2.6rem; color: var(--blood); line-height: 1; }
