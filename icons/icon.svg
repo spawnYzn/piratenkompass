@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="70%"><stop offset="0" stop-color="#f3e4c2"/><stop offset=".75" stop-color="#dcc28c"/><stop offset="1" stop-color="#9c7338"/></radialGradient>
+    <radialGradient id="brass" cx="35%" cy="28%" r="85%"><stop offset="0" stop-color="#f7df94"/><stop offset=".3" stop-color="#d2a347"/><stop offset=".65" stop-color="#8d6220"/><stop offset="1" stop-color="#4a300e"/></radialGradient>
+    <radialGradient id="face" cx="50%" cy="42%" r="62%"><stop offset="0" stop-color="#f6ead0"/><stop offset=".7" stop-color="#e6cf9c"/><stop offset="1" stop-color="#a88245"/></radialGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g transform="translate(256 256)">
+    <circle r="222" fill="url(#brass)" stroke="#2e1d08" stroke-width="5"/>
+    <circle r="186" fill="url(#face)" stroke="#5a3b12" stroke-width="6"/>
+    <g stroke="#2b1a0e" stroke-width="2" stroke-linejoin="round">
+      <g id="p8">
+        <path d="M0 0L0 -120L-14 -14Z" fill="#3a2614" transform="rotate(45)"/><path d="M0 0L0 -120L14 -14Z" fill="#f5e8c8" transform="rotate(45)"/>
+      </g>
+      <use href="#p8" transform="rotate(90)"/><use href="#p8" transform="rotate(180)"/><use href="#p8" transform="rotate(270)"/>
+      <path d="M0 0L0 -168L-26 -26Z" fill="#8c1c13"/><path d="M0 0L0 -168L26 -26Z" fill="#f5e8c8"/>
+      <g id="p4"><path d="M0 0L0 -168L-26 -26Z" fill="#3a2614" transform="rotate(90)"/><path d="M0 0L0 -168L26 -26Z" fill="#f5e8c8" transform="rotate(90)"/></g>
+      <use href="#p4" transform="rotate(90)"/><use href="#p4" transform="rotate(180)"/>
+      <circle r="18" fill="url(#brass)"/>
+    </g>
+  </g>
+</svg>

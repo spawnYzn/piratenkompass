@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Piratenkompass</title>
+  <meta name="description" content="Ein Piratenkompass für die Schatzsuche – zeigt Himmelsrichtungen und den Kurs zur nächsten Station.">
+  <meta name="color-scheme" content="only light">
+  <meta name="darkreader-lock">
+  <meta name="theme-color" content="#2a1c10">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kompass">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=Pirata+One&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="game">
+    <header class="top">
+      <h1 id="huntTitle">Schatzsuche</h1>
+      <button id="openLog" class="log-btn" aria-label="Logbuch öffnen (lange drücken)">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <circle class="ring" cx="24" cy="24" r="21" />
+          <g class="anchor" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="24" cy="11" r="3.5" />
+            <path d="M24 14.5V37M16 19h16M11 28c1 6 6 9.5 13 9.5S36 34 37 28M11 28l-2.5 3M11 28l3.5 1.2M37 28l2.5 3M37 28l-3.5 1.2" />
+          </g>
+        </svg>
+      </button>
+    </header>
+
+    <section class="target-card" aria-live="polite">
+      <div class="tc-label" id="tcLabel">Kein Kurs gesetzt</div>
+      <div class="tc-name" id="tcName">Freier Kompass</div>
+      <div class="tc-step" id="tcStep"></div>
+    </section>
+
+    <div class="compass-wrap" id="compassWrap">
+      <!-- 1: Gehäuse -->
+      <svg class="c-base" viewBox="-210 -210 420 420" aria-hidden="true">
+        <defs>
+          <radialGradient id="gBrass" cx="35%" cy="28%" r="85%">
+            <stop offset="0" stop-color="#f7df94" />
+            <stop offset=".3" stop-color="#d2a347" />
+            <stop offset=".65" stop-color="#8d6220" />
+            <stop offset="1" stop-color="#4a300e" />
+          </radialGradient>
+          <linearGradient id="gBevel" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#5a3b12" />
+            <stop offset=".5" stop-color="#b98a35" />
+            <stop offset="1" stop-color="#f0d488" />
+          </linearGradient>
+          <radialGradient id="gFace" cx="50%" cy="42%" r="62%">
+            <stop offset="0" stop-color="#f6ead0" />
+            <stop offset=".6" stop-color="#ead6a6" />
+            <stop offset=".92" stop-color="#c9a466" />
+            <stop offset="1" stop-color="#8e6a33" />
+          </radialGradient>
+          <filter id="fShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#2b1a0e" flood-opacity=".45" />
+          </filter>
+          <path id="engravePath" d="M -191 0 A 191 191 0 0 0 191 0" />
+        </defs>
+        <circle r="202" fill="url(#gBrass)" filter="url(#fShadow)" />
+        <circle r="202" fill="none" stroke="#2e1d08" stroke-width="3" />
+        <circle r="198" fill="none" stroke="#fbe7a8" stroke-opacity=".35" stroke-width="1.5" />
+        <g id="rivets" fill="#6b4814" stroke="#f5dc92" stroke-opacity=".5" stroke-width="1"></g>
+        <text class="engrave" dy="0"><textPath id="engraveText" href="#engravePath" startOffset="50%" text-anchor="middle">SCHATZSUCHE</textPath></text>
+        <circle r="181" fill="url(#gBevel)" />
+        <circle r="176" fill="url(#gFace)" />
+      </svg>
+
+      <!-- 2: Windrose (dreht sich) -->
+      <svg class="c-rose" id="rose" viewBox="-210 -210 420 420" aria-hidden="true">
+        <g id="roseG"></g>
+        <g id="xMark" class="xmark" style="display:none">
+          <g transform="translate(0,-168)">
+            <circle r="11" />
+            <path d="M-6 -6L6 6M6 -6L-6 6" />
+          </g>
+        </g>
+      </svg>
+
+      <!-- 3: Nadel -->
+      <svg class="c-needle" id="needle" viewBox="-210 -210 420 420" aria-hidden="true">
+        <g class="n-compass" stroke="#2b1a0e" stroke-width="1" stroke-linejoin="round">
+          <path d="M0 -150L13 0H-13Z" fill="#a8241a" />
+          <path d="M0 -150V0H-13Z" fill="#6e130b" />
+          <path d="M0 150L13 0H-13Z" fill="#efe3c6" />
+          <path d="M0 150V0H13Z" fill="#c4b088" />
+        </g>
+        <g class="n-target" stroke="#2b1a0e" stroke-linejoin="round">
+          <rect x="-3.5" y="-104" width="7" height="206" rx="2" fill="#2f2622" stroke-width="1" />
+          <path d="M0 96L15 124V146L0 124L-15 146V124Z" fill="#8c1c13" stroke-width="1.5" />
+          <path d="M0 -162L20 -100L0 -112L-20 -100Z" fill="#c8942e" stroke-width="2" />
+          <path d="M0 -162V-112L-20 -100Z" fill="#f3d27b" stroke-width="0" />
+        </g>
+      </svg>
+
+      <!-- 4: Glas, Kappe, Staub -->
+      <svg class="c-top" viewBox="-210 -210 420 420" aria-hidden="true">
+        <defs>
+          <radialGradient id="gCap" cx="35%" cy="30%" r="75%">
+            <stop offset="0" stop-color="#fbe6a2" />
+            <stop offset=".5" stop-color="#b98a35" />
+            <stop offset="1" stop-color="#4a300e" />
+          </radialGradient>
+          <linearGradient id="gGlass" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff" stop-opacity=".42" />
+            <stop offset="1" stop-color="#fff" stop-opacity="0" />
+          </linearGradient>
+          <radialGradient id="gVignette" r="50%">
+            <stop offset=".72" stop-color="#3b2408" stop-opacity="0" />
+            <stop offset="1" stop-color="#3b2408" stop-opacity=".5" />
+          </radialGradient>
+          <filter id="fDust" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="3" seed="7" />
+            <feColorMatrix values="0 0 0 0 .23  0 0 0 0 .14  0 0 0 0 .05  0 0 0 -2.4 1.45" />
+          </filter>
+          <filter id="fBlotch" x="0" y="0" width="100%" height="100%">
+            <feTurbulence type="fractalNoise" baseFrequency=".018" numOctaves="3" seed="3" />
+            <feColorMatrix values="0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 -3 1.55" />
+          </filter>
+          <clipPath id="cFace"><circle r="176" /></clipPath>
+        </defs>
+        <g clip-path="url(#cFace)">
+          <rect x="-176" y="-176" width="352" height="352" filter="url(#fBlotch)" opacity=".55" />
+          <rect x="-176" y="-176" width="352" height="352" filter="url(#fDust)" opacity=".55" />
+          <circle r="176" fill="url(#gVignette)" />
+          <g fill="none" stroke="#fff" stroke-opacity=".22" stroke-width=".8" stroke-linecap="round">
+            <path d="M-120 60Q-60 20 10 -30" />
+            <path d="M40 120Q90 60 130 -10" />
+            <path d="M-40 -140Q0 -120 60 -128" />
+          </g>
+          <ellipse cx="-40" cy="-95" rx="150" ry="80" transform="rotate(-24)" fill="url(#gGlass)" />
+        </g>
+        <path class="lubber" d="M0 -170L-11 -195H11Z" fill="#8c1c13" stroke="#2b1a0e" stroke-width="1.5" />
+        <circle r="15" fill="url(#gCap)" stroke="#2b1a0e" stroke-width="1.5" />
+        <circle r="4" fill="#2b1a0e" />
+      </svg>
+    </div>
+
+    <section class="readout">
+      <div class="heading"><span id="headingDeg">—</span> <span id="headingDir" class="dir"></span></div>
+      <div id="distance" class="distance" hidden>
+        <span id="distVal"></span>
+        <small id="distSteps"></small>
+      </div>
+      <div id="courseHint" class="course-hint"></div>
+      <div id="status" class="status"></div>
+    </section>
+  </main>
+
+  <!-- Startbildschirm -->
+  <div id="startScreen" class="overlay start">
+    <div class="start-inner">
+      <img src="icons/icon.svg" alt="" class="start-icon" width="140" height="140">
+      <h2>Piratenkompass</h2>
+      <p>Tippe unten, um den Kompass zu erwecken. Dein Handy fragt nach <b>Bewegung&nbsp;&amp;&nbsp;Ausrichtung</b> und nach dem <b>Standort</b> – bitte beides erlauben.</p>
+      <button id="startBtn" class="btn primary">Anker lichten!</button>
+      <p class="fine" id="startError" role="alert"></p>
+    </div>
+  </div>
+
+  <!-- Ankunft -->
+  <div id="arrival" class="overlay arrival" hidden>
+    <div class="coins" id="coins" aria-hidden="true"></div>
+    <div class="scroll-card">
+      <h2 id="arrivalTitle">Land in Sicht!</h2>
+      <p class="arrival-name" id="arrivalName"></p>
+      <p class="arrival-note" id="arrivalNote"></p>
+      <button id="nextBtn" class="btn primary">Kurs auf nächste Station</button>
+      <button id="stayBtn" class="btn ghost">Hier noch umschauen</button>
+    </div>
+  </div>
+
+  <!-- Logbuch (Einstellungen) -->
+  <div id="log" class="sheet" hidden>
+    <header class="sheet-head">
+      <h2>Logbuch des Käpt'ns</h2>
+      <button class="close-btn" id="closeLog" aria-label="Logbuch schließen">✕</button>
+    </header>
+    <div class="sheet-body">
+      <section>
+        <h3>Stationen</h3>
+        <p class="fine" id="logProgress"></p>
+        <ol id="stationList" class="stations"></ol>
+      </section>
+
+      <section class="form-card" id="stationForm">
+        <h3 id="formTitle">Neue Station</h3>
+        <label>Name <input id="stName" type="text" placeholder="z. B. Die alte Eiche" autocomplete="off"></label>
+        <label>Koordinaten
+          <input id="stCoords" type="text" inputmode="text" placeholder="49.3839, 11.1119 oder Maps-Link" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </label>
+        <div class="coord-preview" id="coordPreview"></div>
+        <div class="row">
+          <button type="button" class="btn small" id="gpsBtn">Hier peilen (GPS)</button>
+          <button type="button" class="btn small" id="mapBtn">Auf Karte wählen</button>
+        </div>
+        <label>Hinweis bei Ankunft <span class="opt">(optional)</span>
+          <textarea id="stNote" rows="2" placeholder="z. B. Sucht unter der Bank nach der nächsten Flaschenpost!"></textarea>
+        </label>
+        <div class="row">
+          <button type="button" class="btn primary small" id="saveStation">Station hinzufügen</button>
+          <button type="button" class="btn ghost small" id="cancelEdit" hidden>Abbrechen</button>
+        </div>
+        <details class="help">
+          <summary>Wie komme ich an Koordinaten?</summary>
+          <ul>
+            <li><b>Vor Ort:</b> an die Stelle stellen und „Hier peilen“ drücken (ein paar Sekunden ruhig halten).</li>
+            <li><b>Von zu Hause:</b> „Auf Karte wählen“, Karte unter das Fadenkreuz schieben (auch als Satellitenbild).</li>
+            <li><b>Google Maps:</b> lange auf den Ort drücken → oben erscheinen Zahlen wie <i>49.3839, 11.1119</i> → antippen zum Kopieren → hier einfügen.</li>
+            <li><b>Apple Karten:</b> Stecknadel setzen → nach unten wischen → Koordinaten kopieren.</li>
+          </ul>
+        </details>
+      </section>
+
+      <section>
+        <h3>Einstellungen</h3>
+        <label>Name der Jagd (steht auch auf dem Kompass)
+          <input id="setTitle" type="text" maxlength="40" placeholder="Schatzsuche">
+        </label>
+        <label>Ankunft ab
+          <select id="setRadius">
+            <option value="8">8 m (sehr genau)</option>
+            <option value="12">12 m</option>
+            <option value="15">15 m (empfohlen)</option>
+            <option value="20">20 m</option>
+            <option value="30">30 m (dichte Bebauung)</option>
+          </select>
+        </label>
+        <label class="check"><input id="setSecret" type="checkbox"> Geheim-Modus: Namen der Ziele erst bei Ankunft verraten</label>
+        <label>Kompass-Korrektur in Grad <span class="opt">(normal: 0)</span>
+          <input id="setOffset" type="number" inputmode="numeric" min="-30" max="30" step="1">
+        </label>
+      </section>
+
+      <section>
+        <h3>Schatzkarte</h3>
+        <p class="fine">Als Link verschicken, z. B. vom Laptop aufs iPhone oder an die Mit-Piraten.</p>
+        <div class="row wrap">
+          <button type="button" class="btn small" id="shareBtn">Als Link teilen</button>
+          <button type="button" class="btn small" id="restartBtn">Jagd neu starten</button>
+          <button type="button" class="btn ghost small danger" id="wipeBtn">Alle Stationen löschen</button>
+        </div>
+      </section>
+
+      <section class="fine about">
+        Tipp: Handy möglichst flach halten. Zeigt der Kompass Unsinn, das Handy ein paar Mal in Form einer liegenden Acht schwenken.
+        Und Auto-Sperre auf „Nie“ stellen (Einstellungen › Anzeige &amp; Helligkeit), falls der Bildschirm doch ausgeht.
+      </section>
+    </div>
+  </div>
+
+  <!-- Karte zum Auswählen -->
+  <div id="mapSheet" class="sheet map-sheet" hidden>
+    <header class="sheet-head">
+      <h2>Ort wählen</h2>
+      <button class="close-btn" id="closeMap" aria-label="Karte schließen">✕</button>
+    </header>
+    <div class="map-area">
+      <div id="map"></div>
+      <div class="crosshair" aria-hidden="true"></div>
+    </div>
+    <footer class="map-foot">
+      <div id="mapReadout" class="fine"></div>
+      <button type="button" class="btn primary small" id="mapTake">Diese Stelle nehmen</button>
+    </footer>
+  </div>
+
+  <!-- Import-Dialog -->
+  <div id="importDlg" class="overlay dialog" hidden>
+    <div class="scroll-card">
+      <h2>Schatzkarte gefunden!</h2>
+      <p id="importText"></p>
+      <button id="importYes" class="btn primary">Übernehmen</button>
+      <button id="importNo" class="btn ghost">Verwerfen</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status"></div>
+  <div class="landscape-block"><p>Bitte das Handy hochkant halten, Käpt'n!</p></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
