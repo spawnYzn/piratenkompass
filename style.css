@@ -483,3 +483,128 @@ textarea { resize: vertical; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Startanimation: Deckel ---------- */
+
+.compass-wrap { perspective: 1400px; }
+.lid {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  transform-origin: 50% 1%;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 12px rgba(43, 26, 14, .45));
+}
+.lid svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.lid.open {
+  transform: rotateX(96deg);
+  opacity: 0;
+  transition: transform 1.2s cubic-bezier(.3, .6, .2, 1), opacity .35s ease-in .95s;
+}
+.lid-engrave {
+  font-family: var(--f-sc);
+  font-size: 17px;
+  letter-spacing: 3px;
+  fill: #4f340f;
+}
+.start.leaving { opacity: 0; transition: opacity .4s ease-out; pointer-events: none; }
+
+/* ---------- Heiß & kalt ---------- */
+
+.heat-glow {
+  position: absolute;
+  inset: -7%;
+  z-index: -1;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(circle, rgba(255, 150, 30, 0) 56%, rgba(255, 130, 20, .85) 64%, rgba(255, 90, 10, 0) 73%);
+}
+.course-hint.hot { color: #c2410c; animation: pulse .7s ease-in-out infinite; }
+
+.secret-hit {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 16%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  z-index: 4;
+  touch-action: none;
+  -webkit-touch-callout: none;
+}
+
+/* ---------- Finale ---------- */
+
+.finale {
+  z-index: 45;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 42%, rgba(70, 42, 8, .75), rgba(12, 7, 2, .92) 75%);
+}
+.rays {
+  position: absolute;
+  inset: -60%;
+  pointer-events: none;
+  background: repeating-conic-gradient(rgba(255, 210, 90, .2) 0 6deg, transparent 6deg 18deg);
+  -webkit-mask-image: radial-gradient(circle, #000 10%, transparent 45%);
+  mask-image: radial-gradient(circle, #000 10%, transparent 45%);
+  opacity: 0;
+  animation: spin 40s linear infinite;
+}
+.finale.go .rays { opacity: 1; transition: opacity 1.2s ease-out 1.1s; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.finale-inner {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #f8e9c4;
+}
+.finale h2 { font-size: clamp(2.3rem, 11vw, 3rem); line-height: 1; color: #ffd76a; text-shadow: 0 2px 0 #3a1a0b, 0 0 24px rgba(255, 190, 60, .6); }
+.finale-text { margin: 0; font-size: 1.25rem; line-height: 1.35; }
+.finale .arrival-note { color: #f8e9c4; }
+.finale-inner > h2, .finale-inner > p, .finale-inner > button { opacity: 0; transform: translateY(12px); }
+.finale.go .finale-inner > h2, .finale.go .finale-inner > p, .finale.go .finale-inner > button {
+  opacity: 1;
+  transform: none;
+  transition: opacity .5s ease-out 1.7s, transform .5s cubic-bezier(.25, 1, .5, 1) 1.7s;
+}
+
+.chest {
+  position: relative;
+  width: min(62vw, 250px);
+  margin-bottom: 6px;
+  perspective: 700px;
+  display: flex;
+  flex-direction: column;
+}
+.chest svg { display: block; width: 100%; height: auto; }
+.chest-lid { position: relative; z-index: 2; margin-bottom: -3px; transform-origin: 50% 100%; }
+.chest-body { position: relative; z-index: 1; }
+.chest-glow {
+  position: absolute;
+  z-index: 1;
+  left: 4%; right: 4%;
+  top: 14%;
+  height: 40%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255, 236, 150, 1), rgba(255, 190, 60, .6) 45%, transparent 72%);
+  filter: blur(6px);
+  opacity: 0;
+}
+.finale.go .chest { animation: rattle .9s ease-in-out .15s; }
+.finale.go .chest-lid { transform: rotateX(72deg); transition: transform .9s cubic-bezier(.25, 1, .5, 1) 1.05s; }
+.finale.go .chest-glow { opacity: 1; transition: opacity .6s ease-out 1.15s; }
+@keyframes rattle {
+  0%, 100% { transform: none; }
+  15% { transform: rotate(-4deg) translateY(-2px); }
+  30% { transform: rotate(4deg); }
+  45% { transform: rotate(-3deg) translateY(-3px); }
+  60% { transform: rotate(3deg); }
+  75% { transform: rotate(-1.5deg); }
+}

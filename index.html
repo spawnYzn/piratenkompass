@@ -144,6 +144,44 @@
         <circle r="15" fill="url(#gCap)" stroke="#2b1a0e" stroke-width="1.5" />
         <circle r="4" fill="#2b1a0e" />
       </svg>
+
+      <!-- 5: Glühen beim Näherkommen -->
+      <div class="heat-glow" id="heatGlow" aria-hidden="true"></div>
+
+      <!-- 6: Deckel, klappt beim Start auf -->
+      <div class="lid" id="lid" aria-hidden="true">
+        <svg viewBox="-210 -210 420 420">
+          <defs>
+            <radialGradient id="gLid" cx="38%" cy="30%" r="85%">
+              <stop offset="0" stop-color="#f7df94" />
+              <stop offset=".35" stop-color="#cf9f43" />
+              <stop offset=".7" stop-color="#8d6220" />
+              <stop offset="1" stop-color="#4a300e" />
+            </radialGradient>
+            <path id="lidTextPath" d="M -158 0 A 158 158 0 0 0 158 0" />
+          </defs>
+          <rect x="-34" y="-214" width="68" height="18" rx="6" fill="#6b4814" stroke="#2e1d08" stroke-width="2" />
+          <circle r="202" fill="url(#gLid)" stroke="#2e1d08" stroke-width="3" />
+          <circle r="186" fill="none" stroke="#5a3b12" stroke-width="2.5" />
+          <circle r="180" fill="none" stroke="#fbe7a8" stroke-opacity=".35" stroke-width="1" />
+          <circle r="138" fill="none" stroke="#5a3b12" stroke-width="1.5" stroke-dasharray="2 6" />
+          <g transform="translate(0,-12)">
+            <g stroke="#4f340f" stroke-width="15" stroke-linecap="round">
+              <line x1="-70" y1="-46" x2="70" y2="68" />
+              <line x1="70" y1="-46" x2="-70" y2="68" />
+            </g>
+            <path d="M-42 0a42 42 0 1 1 84 0c0 16-8 24-16 28v14h-52v-14c-8-4-16-12-16-28z" fill="#4f340f" />
+            <circle cx="-16" cy="0" r="11" fill="#c99a3c" />
+            <circle cx="16" cy="0" r="11" fill="#c99a3c" />
+            <path d="M0 14l-6 10h12z" fill="#c99a3c" />
+            <path d="M-13 32v9M0 32v9M13 32v9" stroke="#c99a3c" stroke-width="3" />
+          </g>
+          <text class="lid-engrave"><textPath id="lidText" href="#lidTextPath" startOffset="50%" text-anchor="middle">SCHATZSUCHE</textPath></text>
+        </svg>
+      </div>
+
+      <!-- geheimer Notfall-Knopf: Messingkappe 2 s drücken -->
+      <div class="secret-hit" id="secretHit" aria-hidden="true"></div>
     </div>
 
     <section class="readout">
@@ -180,6 +218,40 @@
     </div>
   </div>
 
+  <!-- Finale: der Schatz -->
+  <div id="finale" class="overlay finale" hidden>
+    <div class="rays" aria-hidden="true"></div>
+    <div class="coins" id="finaleCoins" aria-hidden="true"></div>
+    <div class="finale-inner">
+      <div class="chest" aria-hidden="true">
+        <div class="chest-glow"></div>
+        <div class="chest-lid">
+          <svg viewBox="0 0 200 70">
+            <path d="M4 70V34Q4 2 100 2Q196 2 196 34V70Z" fill="#7a4822" stroke="#2b1a0e" stroke-width="4" />
+            <path d="M8 44Q100 26 192 44" fill="none" stroke="#4a2a12" stroke-width="3" />
+            <rect x="22" y="16" width="16" height="54" fill="#c99a3c" stroke="#2b1a0e" stroke-width="2" />
+            <rect x="162" y="16" width="16" height="54" fill="#c99a3c" stroke="#2b1a0e" stroke-width="2" />
+            <rect x="84" y="50" width="32" height="20" rx="3" fill="#d9ad4a" stroke="#2b1a0e" stroke-width="2" />
+          </svg>
+        </div>
+        <svg class="chest-body" viewBox="0 0 200 120">
+          <rect x="4" y="0" width="192" height="116" rx="6" fill="#6b3f1d" stroke="#2b1a0e" stroke-width="4" />
+          <path d="M6 40H194M6 80H194" stroke="#4a2a12" stroke-width="3" />
+          <rect x="22" y="2" width="16" height="112" fill="#c99a3c" stroke="#2b1a0e" stroke-width="2" />
+          <rect x="162" y="2" width="16" height="112" fill="#c99a3c" stroke="#2b1a0e" stroke-width="2" />
+          <g fill="#6b4814"><circle cx="30" cy="14" r="3" /><circle cx="30" cy="100" r="3" /><circle cx="170" cy="14" r="3" /><circle cx="170" cy="100" r="3" /></g>
+          <rect x="80" y="4" width="40" height="50" rx="5" fill="#d9ad4a" stroke="#2b1a0e" stroke-width="2" />
+          <circle cx="100" cy="22" r="6" fill="#2b1a0e" />
+          <path d="M97 25h6l2 16h-10z" fill="#2b1a0e" />
+        </svg>
+      </div>
+      <h2>X markiert die Stelle!</h2>
+      <p class="finale-text">Hier liegt der Schatz vergraben – grabt ihn aus, ihr Landratten!</p>
+      <p class="arrival-note" id="finaleNote"></p>
+      <button id="finaleBtn" class="btn primary">Jagd beenden</button>
+    </div>
+  </div>
+
   <!-- Logbuch (Einstellungen) -->
   <div id="log" class="sheet" hidden>
     <header class="sheet-head">
@@ -191,6 +263,7 @@
         <h3>Stationen</h3>
         <p class="fine" id="logProgress"></p>
         <ol id="stationList" class="stations"></ol>
+        <button type="button" class="btn small" id="forceArrive">Aktuelle Station als erreicht zählen</button>
       </section>
 
       <section class="form-card" id="stationForm">
@@ -237,6 +310,10 @@
           </select>
         </label>
         <label class="check"><input id="setSecret" type="checkbox"> Geheim-Modus: Namen der Ziele erst bei Ankunft verraten</label>
+        <label class="check"><input id="setSound" type="checkbox"> Klänge: Schiffsglocke &amp; Sonar-Ping beim Näherkommen</label>
+        <label class="check"><input id="setOcean" type="checkbox"> Meeresrauschen &amp; Möwen im Hintergrund</label>
+        <label class="check"><input id="setVoice" type="checkbox"> Piratenstimme liest Hinweise vor</label>
+        <div class="row"><button type="button" class="btn small" id="voiceTest">Stimme probehören</button></div>
         <label>Kompass-Korrektur in Grad <span class="opt">(normal: 0)</span>
           <input id="setOffset" type="number" inputmode="numeric" min="-30" max="30" step="1">
         </label>
@@ -253,6 +330,7 @@
       </section>
 
       <section class="fine about">
+        <b>Geheimer Notfall-Knopf:</b> Messingknopf in der Kompassmitte 2 Sekunden gedrückt halten – die aktuelle Station gilt dann als erreicht (für den Fall, dass das GPS spinnt). Es gibt absichtlich keine sichtbare Rückmeldung.<br><br>
         Tipp: Handy möglichst flach halten. Zeigt der Kompass Unsinn, das Handy ein paar Mal in Form einer liegenden Acht schwenken.
         Und Auto-Sperre auf „Nie“ stellen (Einstellungen › Anzeige &amp; Helligkeit), falls der Bildschirm doch ausgeht.
       </section>

@@ -1,11 +1,17 @@
 import {
   distance, bearing, norm, angleDiff, dirName, parseCoords, formatCoords, formatDistance, encodeHunt, decodeHunt,
 } from './geo.js';
+import {
+  initAudio, pauseAudio, resumeAudio, bell, ping, cannon, setOcean, speak, pirate,
+} from './audio.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const NS = 'http://www.w3.org/2000/svg';
 const STORE = 'piratenkompass.v1';
-const DEFAULTS = { title: 'Schatzsuche', radius: 15, secret: false, offset: 0, stations: [], current: 0 };
+const DEFAULTS = {
+  title: 'Schatzsuche', radius: 15, secret: false, offset: 0, stations: [], current: 0,
+  sound: true, ocean: true, voice: true,
+};
 const STEP_M = 0.6; // ein Kinder-Piratenschritt
 const KORNBURG = { lat: 49.3839, lon: 11.1119 };
 const LEAFLET = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/';
@@ -28,8 +34,12 @@ const S = {
   vel: 0,
   shownArrival: -1,
   capture: null,
-  audio: null,
   lastText: 0,
+  heat: 0,           // 0 = weit weg, 1 = am Ziel
+  spin: 0,           // Extra-Drehung der Nadel für die Startanimation
+  spinAt: 0,
+  lastPing: 0,
+  nearSpoken: -1,
 };
 
 function loadHunt() {
@@ -104,10 +114,7 @@ function buildCompass() {
 async function start() {
   const err = $('#startError');
   err.textContent = '';
-  try {
-    S.audio = new (window.AudioContext || window.webkitAudioContext)();
-    S.audio.resume?.();
-  } catch { /* ohne Ton */ }
+  initAudio();
 
   if (!DEMO && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
     try {
@@ -132,7 +139,23 @@ async function start() {
     startGeo();
   }
   keepAwake();
-  $('#startScreen').hidden = true;
+  const ss = $('#startScreen');
+  ss.classList.add('leaving');
+  setTimeout(() => { ss.hidden = true; }, 450);
+  playIntro();
+}
+
+// Deckel klappt auf, Nadel wirbelt zwei Runden und pendelt sich ein
+function playIntro() {
+  const lid = $('#lid');
+  setTimeout(() => { lid.classList.add('open'); }, 350);
+  setTimeout(() => { S.spinAt = performance.now(); }, 750);
+  setTimeout(() => { lid.hidden = true; }, 1800);
+  setTimeout(() => {
+    if (hunt.sound) bell(1);
+    if (hunt.ocean) setOcean(true);
+  }, 900);
+  if (hunt.voice) setTimeout(() => speak(pirate.greet()), 1700);
 }
 
 function onOrient(e) {
@@ -171,7 +194,8 @@ async function keepAwake() {
   } catch { /* nicht verfügbar */ }
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && S.started) keepAwake();
+  if (!S.started) return;
+  if (document.visibilityState === 'visible') { keepAwake(); resumeAudio(); } else pauseAudio();
 });
 
 function heading(t) {
@@ -186,6 +210,8 @@ const activeStation = () => hunt.stations[hunt.current] || null;
 
 const roseEl = $('#rose');
 const needleEl = $('#needle');
+const heatGlow = $('#heatGlow');
+const overlayOpen = () => !$('#arrival').hidden || !$('#finale').hidden || !$('#log').hidden || !$('#mapSheet').hidden;
 
 function frame(t) {
   const h = heading(t);
@@ -200,8 +226,20 @@ function frame(t) {
     S.vel = S.vel * 0.72 + angleDiff(S.needle, desired) * 0.09;
     S.needle += S.vel;
 
+    // Startwirbel: zwei Runden, zeitbasiert ausgebremst (2,2 s)
+    const sp = S.spinAt ? Math.min(1, (t - S.spinAt) / 2200) : 1;
+    S.spin = 720 * (1 - sp) ** 3;
+    // in der Nähe des Ziels zittert die Nadel aufgeregt
+    const jitter = S.heat ? (Math.sin(t / 43) * 3 + Math.sin(t / 19) * 1.5) * S.heat : 0;
+
     roseEl.style.transform = `rotate(${(-S.rose).toFixed(2)}deg)`;
-    needleEl.style.transform = `rotate(${S.needle.toFixed(2)}deg)`;
+    needleEl.style.transform = `rotate(${(S.needle + S.spin + jitter).toFixed(2)}deg)`;
+  }
+
+  heatGlow.style.opacity = S.heat ? (S.heat * (0.55 + 0.45 * Math.sin(t / (260 - S.heat * 150)))).toFixed(3) : '0';
+  if (S.heat && hunt.sound && !overlayOpen() && t - S.lastPing > 1700 - 1400 * S.heat) {
+    S.lastPing = t;
+    ping(S.heat);
   }
   if (t - S.lastText > 150) {
     S.lastText = t;
@@ -258,11 +296,16 @@ function updateText(h) {
   const hint = $('#courseHint');
   let hintText = '';
   let onCourse = false;
-  let near = false;
+  const nearR = Math.max(35, hunt.radius * 2.5);
+  S.heat = d != null && d < nearR ? Math.min(1, Math.max(0.05, 1 - (d - hunt.radius) / (nearR - hunt.radius))) : 0;
+  const near = S.heat > 0 || (d != null && d <= S.pos.acc);
+  if (S.heat && S.nearSpoken !== i) {
+    S.nearSpoken = i;
+    if (hunt.voice && d > hunt.radius) speak(pirate.near());
+  }
   if (targetMode && h != null) {
     const rel = angleDiff(h, b);
-    near = d <= Math.max(hunt.radius * 2.5, S.pos.acc);
-    if (near) hintText = 'Ganz nah! Augen auf!';
+    if (near) hintText = S.heat < 0.34 ? 'Warm …' : S.heat < 0.67 ? 'Heiß!' : 'Glühend heiß!';
     else if (Math.abs(rel) <= 15) { hintText = 'Auf Kurs, Käpt\'n!'; onCourse = true; }
     else if (Math.abs(rel) > 150) hintText = 'Kehrt marsch! ↶';
     else if (rel > 60) hintText = 'Hart Steuerbord! →';
@@ -271,7 +314,7 @@ function updateText(h) {
     else hintText = '← Etwas Backbord';
   }
   setText('#courseHint', hintText);
-  hint.classList.toggle('near', near);
+  hint.classList.toggle('hot', near);
   document.body.classList.toggle('on-course', onCourse);
 
   $('#status').innerHTML = statusHtml(h);
@@ -302,14 +345,47 @@ function showArrival() {
   const st = hunt.stations[i];
   const last = i === hunt.stations.length - 1;
   S.shownArrival = i;
-  $('#arrivalTitle').textContent = last ? 'Der Schatz ist hier!' : 'Land in Sicht!';
-  $('#arrivalName').textContent = st.name || `Station ${i + 1}`;
-  $('#arrivalNote').textContent = st.note || '';
-  $('#nextBtn').textContent = last ? 'Jagd beenden' : 'Kurs auf nächste Station';
-  $('#arrival').hidden = false;
-  rainCoins(last ? 60 : 28);
-  shipBell(last ? 3 : 2);
   navigator.vibrate?.([200, 100, 200]);
+  if (last) { showFinale(st); return; }
+  const name = st.name || `Station ${i + 1}`;
+  $('#arrivalTitle').textContent = 'Land in Sicht!';
+  $('#arrivalName').textContent = name;
+  $('#arrivalNote').textContent = st.note || '';
+  $('#arrival').hidden = false;
+  rainCoins($('#coins'), 28);
+  if (hunt.sound) bell(2);
+  if (hunt.voice) setTimeout(() => speak(pirate.arrive(name, st.note)), 1100);
+}
+
+function showFinale(st) {
+  const f = $('#finale');
+  $('#finaleNote').textContent = st.note || '';
+  $('#finaleCoins').innerHTML = '';
+  f.classList.remove('go');
+  f.hidden = false;
+  void f.offsetWidth; // Animation neu starten
+  f.classList.add('go');
+  if (hunt.sound) cannon();
+  setTimeout(() => {
+    rainCoins($('#finaleCoins'), 70);
+    if (hunt.sound) bell(3);
+  }, 1150);
+  if (hunt.voice) setTimeout(() => speak(pirate.finale(st.note)), 2300);
+}
+
+$('#finaleBtn').addEventListener('click', () => {
+  hunt.current = hunt.stations.length;
+  saveHunt();
+  $('#finale').hidden = true;
+  try { speechSynthesis.cancel(); } catch { /* egal */ }
+});
+
+// Ankunft von Hand auslösen, falls das GPS spinnt
+function forceArrival() {
+  if (!activeStation()) return false;
+  S.shownArrival = -1;
+  showArrival();
+  return true;
 }
 
 $('#nextBtn').addEventListener('click', () => {
@@ -319,8 +395,7 @@ $('#nextBtn').addEventListener('click', () => {
 });
 $('#stayBtn').addEventListener('click', () => { $('#arrival').hidden = true; });
 
-function rainCoins(count) {
-  const box = $('#coins');
+function rainCoins(box, count) {
   box.innerHTML = '';
   for (let k = 0; k < count; k++) {
     const c = document.createElement('span');
@@ -331,32 +406,6 @@ function rainCoins(count) {
     const s = 16 + Math.random() * 16;
     c.style.width = c.style.height = `${s}px`;
     box.appendChild(c);
-  }
-}
-
-// Schiffsglocke, synthetisch – braucht keine Audiodatei
-function shipBell(strikes) {
-  const ctx = S.audio;
-  if (!ctx) return;
-  ctx.resume?.();
-  const partials = [[1, 1], [2.02, 0.55], [2.74, 0.35], [4.08, 0.2], [5.4, 0.12]];
-  for (let s = 0; s < strikes; s++) {
-    const t0 = ctx.currentTime + s * 0.55;
-    const master = ctx.createGain();
-    master.gain.value = 0.35;
-    master.connect(ctx.destination);
-    for (const [ratio, amp] of partials) {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type = 'sine';
-      o.frequency.value = 660 * ratio;
-      g.gain.setValueAtTime(0.0001, t0);
-      g.gain.exponentialRampToValueAtTime(amp, t0 + 0.005);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 2.2 / ratio + 0.4);
-      o.connect(g).connect(master);
-      o.start(t0);
-      o.stop(t0 + 3);
-    }
   }
 }
 
@@ -385,12 +434,31 @@ logBtn.addEventListener('pointerleave', () => cancelPress(false));
 logBtn.addEventListener('pointercancel', () => cancelPress(false));
 logBtn.addEventListener('contextmenu', (e) => e.preventDefault());
 
+const secret = $('#secretHit');
+let secretTimer = null;
+secret.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  clearTimeout(secretTimer);
+  secretTimer = setTimeout(forceArrival, 2000);
+});
+for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) secret.addEventListener(ev, () => clearTimeout(secretTimer));
+secret.addEventListener('contextmenu', (e) => e.preventDefault());
+
+$('#forceArrive').addEventListener('click', () => {
+  $('#log').hidden = true;
+  resetForm();
+  if (!forceArrival()) toast('Kein aktives Ziel gesetzt');
+});
+
 function openLog() {
   renderLog();
   $('#setTitle').value = hunt.title;
   $('#setRadius').value = String(hunt.radius);
   $('#setSecret').checked = !!hunt.secret;
   $('#setOffset').value = String(hunt.offset || 0);
+  $('#setSound').checked = !!hunt.sound;
+  $('#setOcean').checked = !!hunt.ocean;
+  $('#setVoice').checked = !!hunt.voice;
   $('#log').hidden = false;
 }
 $('#closeLog').addEventListener('click', () => { $('#log').hidden = true; resetForm(); });
@@ -591,6 +659,13 @@ $('#setTitle').addEventListener('input', (e) => {
 });
 $('#setRadius').addEventListener('change', (e) => { hunt.radius = +e.target.value; saveHunt(); });
 $('#setSecret').addEventListener('change', (e) => { hunt.secret = e.target.checked; saveHunt(); });
+$('#setSound').addEventListener('change', (e) => { hunt.sound = e.target.checked; saveHunt(); });
+$('#setOcean').addEventListener('change', (e) => { hunt.ocean = e.target.checked; setOcean(hunt.ocean); saveHunt(); });
+$('#setVoice').addEventListener('change', (e) => { hunt.voice = e.target.checked; saveHunt(); });
+$('#voiceTest').addEventListener('click', () => {
+  const st = activeStation() || { name: 'die alte Eiche', note: 'Sucht unter der Bank nach der Flaschenpost!' };
+  speak(pirate.arrive(st.name || 'die nächste Station', st.note));
+});
 $('#setOffset').addEventListener('input', (e) => {
   const v = Math.max(-30, Math.min(30, Math.round(+e.target.value || 0)));
   hunt.offset = v;
@@ -601,12 +676,14 @@ function applyTitle() {
   const t = hunt.title || 'Schatzsuche';
   $('#huntTitle').textContent = t;
   $('#engraveText').textContent = `✦ ${t.toUpperCase()} ✦`;
+  $('#lidText').textContent = t.toUpperCase();
   document.title = `${t} · Piratenkompass`;
 }
 
 $('#restartBtn').addEventListener('click', () => {
   hunt.current = 0;
   S.shownArrival = -1;
+  S.nearSpoken = -1;
   saveHunt();
   renderLog();
   toast('Die Jagd beginnt von vorn – Kurs auf Station 1');
