@@ -1,5 +1,5 @@
 // Offline-Cache: App sofort aus dem Cache, im Hintergrund aktualisieren
-const CACHE = 'kompass-v2';
+const CACHE = 'kompass-v3';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'geo.js', 'audio.js', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 

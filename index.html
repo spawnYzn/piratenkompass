@@ -312,11 +312,22 @@
         <label class="check"><input id="setSecret" type="checkbox"> Geheim-Modus: Namen der Ziele erst bei Ankunft verraten</label>
         <label class="check"><input id="setSound" type="checkbox"> Klänge: Schiffsglocke &amp; Sonar-Ping beim Näherkommen</label>
         <label class="check"><input id="setOcean" type="checkbox"> Meeresrauschen &amp; Möwen im Hintergrund</label>
-        <label class="check"><input id="setVoice" type="checkbox"> Piratenstimme liest Hinweise vor</label>
-        <div class="row"><button type="button" class="btn small" id="voiceTest">Stimme probehören</button></div>
+        <label class="check"><input id="setVoice" type="checkbox"> Piratenstimme (eure Sprachschnipsel)</label>
         <label>Kompass-Korrektur in Grad <span class="opt">(normal: 0)</span>
           <input id="setOffset" type="number" inputmode="numeric" min="-30" max="30" step="1">
         </label>
+      </section>
+
+      <section>
+        <h3>Testen</h3>
+        <p class="fine">Der Probelauf tut so, als würdet ihr aus 70 m auf das aktuelle Ziel zulaufen (ca. 35 s) – mit Glühen, Sonar, Stimme und Ankunft. Der Kompass bleibt echt: dreh dich ruhig. Danach ist alles wie vorher.</p>
+        <button type="button" class="btn primary small" id="simBtn">Probelauf zum aktuellen Ziel</button>
+        <div class="row wrap">
+          <button type="button" class="btn small" id="tBell">Glocke</button>
+          <button type="button" class="btn small" id="tPing">Sonar</button>
+          <button type="button" class="btn small" id="tCannon">Kanone</button>
+          <button type="button" class="btn small" id="voiceTest">Stimme</button>
+        </div>
       </section>
 
       <section>
@@ -361,6 +372,11 @@
       <button id="importYes" class="btn primary">Übernehmen</button>
       <button id="importNo" class="btn ghost">Verwerfen</button>
     </div>
+  </div>
+
+  <div id="simBanner" class="sim-banner" hidden>
+    <span>Probelauf · <span id="simDist"></span></span>
+    <button type="button" id="simStop">Beenden</button>
   </div>
 
   <div id="toast" class="toast" role="status"></div>

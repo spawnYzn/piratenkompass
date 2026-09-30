@@ -13,12 +13,11 @@ export function initAudio() {
     master.connect(ctx.destination);
     ctx.resume?.();
   } catch { ctx = null; }
-  unlockSpeech();
 }
 
 export function pauseAudio() {
+  stopVoice();
   ctx?.suspend?.();
-  try { speechSynthesis.cancel(); } catch { /* egal */ }
 }
 export function resumeAudio() { ctx?.resume?.(); }
 
@@ -187,52 +186,61 @@ function duckOcean(down) {
   ocean.out.gain.linearRampToValueAtTime(down ? 0.03 : 0.14, t + 0.4);
 }
 
-/* ---------------------------------------------------------- Piratenstimme */
+/* ---------------------------------------------------------- Piratenstimme (Audio-Schnipsel aus sounds/) */
 
-let voice = null;
-function pickVoice() {
-  if (!('speechSynthesis' in window)) return null;
-  const de = speechSynthesis.getVoices().filter((v) => /^de/i.test(v.lang));
-  const prefs = [/grandpa|opa/i, /rocko/i, /eddy/i, /markus/i, /yannick/i, /martin/i, /viktor/i];
-  for (const p of prefs) {
-    const v = de.find((x) => p.test(x.name));
-    if (v) return v;
+const clips = new Map();
+const tried = new Set();
+let voiceSrc = null;
+
+export async function loadClips(names) {
+  if (!ctx) return;
+  await Promise.all(names.filter((n) => !tried.has(n)).map(async (n) => {
+    tried.add(n);
+    try {
+      const res = await fetch(`sounds/${n}.mp3`);
+      if (!res.ok) return;
+      clips.set(n, await ctx.decodeAudioData(await res.arrayBuffer()));
+    } catch (e) { console.warn('Sprachschnipsel nicht lesbar:', n, e); }
+  }));
+}
+
+export const clipCount = () => clips.size;
+
+// zufällige Variante: "nah" findet nah, nah-1, nah-2 …
+export function pickClip(prefix) {
+  const opts = [...clips.keys()].filter((k) => k === prefix || k.startsWith(`${prefix}-`));
+  return opts.length ? opts[Math.floor(Math.random() * opts.length)] : null;
+}
+
+export function stopVoice() {
+  try { voiceSrc?.stop(); } catch { /* schon aus */ }
+  voiceSrc = null;
+}
+
+function playClip(name) {
+  return new Promise((resolve) => {
+    const buf = name && clips.get(name);
+    if (!ctx || !buf) { resolve(false); return; }
+    stopVoice();
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(master);
+    duckOcean(true);
+    src.onended = () => {
+      if (voiceSrc === src) { voiceSrc = null; duckOcean(false); }
+      resolve(true);
+    };
+    voiceSrc = src;
+    src.start();
+  });
+}
+
+// spielt die Schnipsel nacheinander; fehlende werden übersprungen
+export async function playVoice(names) {
+  await loadClips(names.filter(Boolean));
+  let played = false;
+  for (const n of names) {
+    if (await playClip(n)) played = true;
   }
-  return de[0] || null;
+  return played;
 }
-if ('speechSynthesis' in window) {
-  voice = pickVoice();
-  speechSynthesis.addEventListener?.('voiceschanged', () => { voice = pickVoice(); });
-}
-
-// iOS gibt die Sprachausgabe erst nach einer Äußerung innerhalb einer Nutzer-Geste frei
-function unlockSpeech() {
-  try {
-    const u = new SpeechSynthesisUtterance(' ');
-    u.volume = 0;
-    speechSynthesis.speak(u);
-  } catch { /* nicht verfügbar */ }
-}
-
-export function speak(text) {
-  if (!('speechSynthesis' in window) || !text) return;
-  try {
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'de-DE';
-    if (voice) u.voice = voice;
-    u.pitch = 0.6;
-    u.rate = 0.9;
-    u.onstart = () => duckOcean(true);
-    u.onend = u.onerror = () => duckOcean(false);
-    speechSynthesis.speak(u);
-  } catch { /* nicht verfügbar */ }
-}
-
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-export const pirate = {
-  greet: () => pick(['Ahoi, Käpt\'n! Der Kompass ist bereit. Setzt die Segel!', 'Arrr! Der Kompass ist erwacht. Auf zur Schatzsuche!']),
-  near: () => pick(['Arrr, wir sind ganz nah! Haltet die Augen offen!', 'Land in Sicht! Gleich haben wir es geschafft!']),
-  arrive: (name, note) => `${pick(['Arrr!', 'Ahoi!', 'Bei Neptuns Bart!'])} Wir haben ${name} erreicht! ${note || ''}`,
-  finale: (note) => `Arrr! X markiert die Stelle! Hier liegt der Schatz vergraben. Grabt ihn aus, ihr Landratten! ${note || ''}`,
-};

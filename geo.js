@@ -23,6 +23,16 @@ export function bearing(a, b) {
   return norm(deg(Math.atan2(y, x)));
 }
 
+// Punkt, der von a aus in Richtung brg (Grad) dist Meter entfernt liegt
+export function destination(a, brg, dist) {
+  const d = dist / R_EARTH;
+  const t = rad(brg);
+  const la1 = rad(a.lat);
+  const la2 = Math.asin(Math.sin(la1) * Math.cos(d) + Math.cos(la1) * Math.sin(d) * Math.cos(t));
+  const lo2 = rad(a.lon) + Math.atan2(Math.sin(t) * Math.sin(d) * Math.cos(la1), Math.cos(d) - Math.sin(la1) * Math.sin(la2));
+  return { lat: deg(la2), lon: deg(lo2) };
+}
+
 const DIRS = ['N', 'NNO', 'NO', 'ONO', 'O', 'OSO', 'SO', 'SSO', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
 export const dirName = (h) => DIRS[Math.round(norm(h) / 22.5) % 16];
 

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { distance, bearing, angleDiff, dirName, parseCoords, encodeHunt, decodeHunt, formatDistance } from '../geo.js';
+import { destination, distance, bearing, angleDiff, dirName, parseCoords, encodeHunt, decodeHunt, formatDistance } from '../geo.js';
 
 const near = (a, b, eps, msg) => assert.ok(Math.abs(a - b) <= eps, `${msg ?? ''} ${a} ≉ ${b}`);
 
@@ -82,4 +82,13 @@ test('Schatzkarte teilen: Hin- und Rückweg mit Umlauten', () => {
 test('Entfernungsformat', () => {
   assert.equal(formatDistance(42.4), '42 m');
   assert.equal(formatDistance(1234), '1,23 km');
+});
+
+test('Zielpunkt: Hin und zurück', () => {
+  const o = { lat: 49.3839, lon: 11.1119 };
+  for (const brg of [0, 73, 180, 290]) {
+    const p = destination(o, brg, 70);
+    near(distance(o, p), 70, 0.01, `Distanz ${brg}`);
+    near(bearing(o, p), brg, 0.05, `Peilung ${brg}`);
+  }
 });

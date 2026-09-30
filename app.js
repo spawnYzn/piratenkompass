@@ -1,8 +1,8 @@
 import {
-  distance, bearing, norm, angleDiff, dirName, parseCoords, formatCoords, formatDistance, encodeHunt, decodeHunt,
+  destination, distance, bearing, norm, angleDiff, dirName, parseCoords, formatCoords, formatDistance, encodeHunt, decodeHunt,
 } from './geo.js';
 import {
-  initAudio, pauseAudio, resumeAudio, bell, ping, cannon, setOcean, speak, pirate,
+  initAudio, pauseAudio, resumeAudio, bell, ping, cannon, setOcean, loadClips, clipCount, pickClip, playVoice, stopVoice,
 } from './audio.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -132,12 +132,13 @@ async function start() {
   S.started = true;
   S.startAt = performance.now();
   if (DEMO) {
-    S.pos = { lat: KORNBURG.lat, lon: KORNBURG.lon, acc: 5 };
+    S.pos = S.realPos = { lat: KORNBURG.lat, lon: KORNBURG.lon, acc: 5 };
   } else {
     if ('ondeviceorientationabsolute' in window) window.addEventListener('deviceorientationabsolute', onOrient, true);
     window.addEventListener('deviceorientation', onOrient, true);
     startGeo();
   }
+  S.clipsReady = loadClips(clipNames());
   keepAwake();
   const ss = $('#startScreen');
   ss.classList.add('leaving');
@@ -155,7 +156,18 @@ function playIntro() {
     if (hunt.sound) bell(1);
     if (hunt.ocean) setOcean(true);
   }, 900);
-  if (hunt.voice) setTimeout(() => speak(pirate.greet()), 1700);
+  if (hunt.voice) {
+    Promise.all([S.clipsReady, new Promise((r) => setTimeout(r, 1700))])
+      .then(() => playVoice([pickClip('begruessung')]));
+  }
+}
+
+// Sprachschnipsel, die im Ordner sounds/ liegen dürfen (fehlende werden ignoriert)
+function clipNames() {
+  const names = ['begruessung', 'nah', 'ankunft', 'finale'];
+  for (let k = 1; k <= 5; k++) names.push(`begruessung-${k}`, `nah-${k}`, `ankunft-${k}`, `finale-${k}`);
+  for (let k = 1; k <= Math.max(hunt.stations.length, 1); k++) names.push(`station-${k}`);
+  return names;
 }
 
 function onOrient(e) {
@@ -175,9 +187,10 @@ function startGeo() {
   if (!('geolocation' in navigator)) { S.geoErr = 'unsupported'; return; }
   navigator.geolocation.watchPosition(
     (p) => {
-      S.pos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy };
+      S.realPos = { lat: p.coords.latitude, lon: p.coords.longitude, acc: p.coords.accuracy };
+      if (!S.sim) S.pos = S.realPos;
       S.geoErr = null;
-      S.capture?.(S.pos);
+      S.capture?.(S.realPos);
     },
     (e) => { S.geoErr = e.code === 1 ? 'denied' : 'unavailable'; },
     { enableHighAccuracy: true, maximumAge: 1000, timeout: 30000 },
@@ -301,7 +314,7 @@ function updateText(h) {
   const near = S.heat > 0 || (d != null && d <= S.pos.acc);
   if (S.heat && S.nearSpoken !== i) {
     S.nearSpoken = i;
-    if (hunt.voice && d > hunt.radius) speak(pirate.near());
+    if (hunt.voice && d > hunt.radius) playVoice([pickClip('nah')]);
   }
   if (targetMode && h != null) {
     const rel = angleDiff(h, b);
@@ -354,7 +367,7 @@ function showArrival() {
   $('#arrival').hidden = false;
   rainCoins($('#coins'), 28);
   if (hunt.sound) bell(2);
-  if (hunt.voice) setTimeout(() => speak(pirate.arrive(name, st.note)), 1100);
+  if (hunt.voice) setTimeout(() => playVoice([pickClip('ankunft'), `station-${i + 1}`]), 1100);
 }
 
 function showFinale(st) {
@@ -370,14 +383,15 @@ function showFinale(st) {
     rainCoins($('#finaleCoins'), 70);
     if (hunt.sound) bell(3);
   }, 1150);
-  if (hunt.voice) setTimeout(() => speak(pirate.finale(st.note)), 2300);
+  if (hunt.voice) setTimeout(() => playVoice([pickClip('finale'), `station-${hunt.current + 1}`]), 2300);
 }
 
 $('#finaleBtn').addEventListener('click', () => {
   hunt.current = hunt.stations.length;
   saveHunt();
   $('#finale').hidden = true;
-  try { speechSynthesis.cancel(); } catch { /* egal */ }
+  stopVoice();
+  stopSim();
 });
 
 // Ankunft von Hand auslösen, falls das GPS spinnt
@@ -392,8 +406,56 @@ $('#nextBtn').addEventListener('click', () => {
   hunt.current = Math.min(hunt.current + 1, hunt.stations.length);
   saveHunt();
   $('#arrival').hidden = true;
+  stopSim();
 });
-$('#stayBtn').addEventListener('click', () => { $('#arrival').hidden = true; });
+$('#stayBtn').addEventListener('click', () => { $('#arrival').hidden = true; stopSim(); });
+
+/* ------------------------------------------------------------------ Probelauf */
+
+// Simuliert, dass man aus 70 m auf die aktuelle Station zuläuft (Ziel liegt anfangs genau voraus).
+// Der echte Kompass bleibt aktiv; nach dem Probelauf ist der Fortschritt wie vorher.
+const SIM_START_M = 70;
+const SIM_SPEED = 2; // m/s, also ~35 s bis zum Ziel
+
+function startSim() {
+  const st = activeStation();
+  if (!st) { toast('Erst im Logbuch eine Station als Ziel setzen'); return false; }
+  stopSim(true);
+  S.sim = { target: st, back: norm((heading(performance.now()) ?? 0) + 180), t0: performance.now(), savedCurrent: hunt.current };
+  S.shownArrival = -1;
+  S.nearSpoken = -1;
+  simTick();
+  S.simTimer = setInterval(simTick, 250);
+  $('#simBanner').hidden = false;
+  return true;
+}
+
+function simTick() {
+  const dist = Math.max(0, SIM_START_M - SIM_SPEED * ((performance.now() - S.sim.t0) / 1000));
+  S.pos = { ...destination(S.sim.target, S.sim.back, dist), acc: 4 };
+  setText('#simDist', `noch ${Math.round(dist)} m`);
+}
+
+function stopSim(silent = false) {
+  if (!S.sim) return;
+  clearInterval(S.simTimer);
+  hunt.current = S.sim.savedCurrent;
+  S.sim = null;
+  S.pos = S.realPos || null;
+  S.shownArrival = -1;
+  S.nearSpoken = -1;
+  saveHunt();
+  $('#simBanner').hidden = true;
+  if (!silent) toast('Probelauf beendet');
+}
+
+$('#simBtn').addEventListener('click', () => {
+  if (startSim()) { $('#log').hidden = true; resetForm(); }
+});
+$('#simStop').addEventListener('click', () => stopSim());
+$('#tBell').addEventListener('click', () => bell(2));
+$('#tPing').addEventListener('click', () => { ping(0.3); setTimeout(() => ping(0.7), 500); setTimeout(() => ping(1), 850); });
+$('#tCannon').addEventListener('click', () => cannon());
 
 function rainCoins(box, count) {
   box.innerHTML = '';
@@ -662,9 +724,12 @@ $('#setSecret').addEventListener('change', (e) => { hunt.secret = e.target.check
 $('#setSound').addEventListener('change', (e) => { hunt.sound = e.target.checked; saveHunt(); });
 $('#setOcean').addEventListener('change', (e) => { hunt.ocean = e.target.checked; setOcean(hunt.ocean); saveHunt(); });
 $('#setVoice').addEventListener('change', (e) => { hunt.voice = e.target.checked; saveHunt(); });
-$('#voiceTest').addEventListener('click', () => {
-  const st = activeStation() || { name: 'die alte Eiche', note: 'Sucht unter der Bank nach der Flaschenpost!' };
-  speak(pirate.arrive(st.name || 'die nächste Station', st.note));
+$('#voiceTest').addEventListener('click', async () => {
+  await loadClips(clipNames());
+  const n = clipCount();
+  if (!n) { toast('Noch keine Sprachschnipsel im Ordner sounds/ gefunden'); return; }
+  toast(`${n} Sprachschnipsel gefunden – spiele Begrüßung`);
+  playVoice([pickClip('begruessung') || pickClip('ankunft')]);
 });
 $('#setOffset').addEventListener('input', (e) => {
   const v = Math.max(-30, Math.min(30, Math.round(+e.target.value || 0)));
