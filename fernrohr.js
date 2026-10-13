@@ -1,10 +1,10 @@
 // Fernrohr-Modus (Station Wasserturm): Rückkamera im Messing-Fernrohr. Das Bild wird scharf,
-// wenn man in die gespeicherte Richtung schaut; nach 1 s Treffer erscheint das Rätselbild.
+// wenn man in die gespeicherte Richtung schaut; nach 3,5 s Treffer erscheint das Rätselbild.
 import { angleDiff, circularMean, scopeBlur } from './geo.js';
 
 const $ = (s) => document.querySelector(s);
 const HIT_DEG = 20;      // Treffer-Korridor ±20°
-const HIT_MS = 1000;     // so lange muss man draufhalten
+const HIT_MS = 3500;     // so lange muss man draufhalten
 const SMOOTH_MS = 450;   // gleitender Mittelwert über diese Zeitspanne
 const CALIB_MS = 3000;   // Countdown beim Einmessen
 const CALIB_AVG_MS = 1000; // gemittelt wird die letzte Sekunde davor
@@ -15,6 +15,9 @@ const content = $('#scopeContent');
 const fog = $('#scopeFog');
 const img = $('#scopeImg');
 const msg = $('#scopeMsg');
+const progress = $('#scopeProgress');
+const RING_LEN = 2 * Math.PI * 105; // Umfang des Fortschrittsrings im Messingrand
+progress.style.strokeDasharray = `${RING_LEN} ${RING_LEN}`;
 
 let shown = false;
 let hideTimer = null;
@@ -26,6 +29,7 @@ let hit = false;
 let calib = null;      // { t0, done }
 let lastBlur = -1;
 let lastMsg = null;
+let lastProgress = -1;
 
 // Nieten rund um den Messingrand
 for (let a = 15; a < 360; a += 30) {
@@ -136,6 +140,15 @@ function setBlur(px) {
   fog.style.opacity = (px / 14 * 0.85).toFixed(2);
 }
 
+// Ring im Messingrand füllt sich, solange man aufs Ziel hält (0 … 1)
+function setProgress(p) {
+  const v = Math.max(0, Math.min(1, p));
+  if (Math.abs(v - lastProgress) < 0.004) return;
+  lastProgress = v;
+  progress.style.strokeDashoffset = (RING_LEN * (1 - v)).toFixed(1);
+  progress.style.opacity = v > 0 ? '1' : '0';
+}
+
 function smoothed(t, h) {
   if (h != null) samples.push({ t, h });
   while (samples.length && t - samples[0].t > SMOOTH_MS) samples.shift();
@@ -156,6 +169,7 @@ function calibFrame(t, h) {
   if (h != null) calib.raw.push({ t, h });
   box.classList.add('calib');
   setBlur(0);
+  setProgress(0);
   if (left > 0) {
     const cur = h == null ? '—' : `${Math.round(h) % 360}°`;
     setMsg(`Aufs Versteck zielen … ${Math.ceil(left / 1000)} · ${cur}`);
@@ -186,15 +200,17 @@ export function scopeFrame(t, { active, rotate, heading, target, onHit }) {
   if (h == null) {
     setMsg('Kompass neu kalibrieren – Handy kurz flach halten');
     setBlur(14);
+    setProgress(0);
     onSince = null;
     return;
   }
   if (target == null) {
     setMsg('Noch kein Fernrohr-Ziel eingemessen');
     setBlur(14);
+    setProgress(0);
     return;
   }
-  if (hit) { setMsg(''); setBlur(0); return; }
+  if (hit) { setMsg(''); setBlur(0); setProgress(1); return; }
 
   const dev = Math.abs(angleDiff(h, target));
   setBlur(scopeBlur(dev));
@@ -210,4 +226,5 @@ export function scopeFrame(t, { active, rotate, heading, target, onHit }) {
   } else {
     onSince = null;
   }
+  setProgress(hit ? 1 : onSince == null ? 0 : (t - onSince) / HIT_MS);
 }

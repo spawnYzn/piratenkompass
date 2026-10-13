@@ -1,6 +1,6 @@
 # Fernrohr-Modus: Testanleitung & offene Punkte
 
-An der Station **Wasserturm** wird der Kompass zum Fernrohr: Die Kinder stehen am Ausguck-Punkt, halten das iPhone quer und schauen sich um. Zeigt die Rückkamera in die eingemessene Richtung, wird das Bild scharf. Nach 1 s erscheint das Rätselbild mit dem Hinweis auf das Schlüssel-Versteck.
+An der Station **Wasserturm** wird der Kompass zum Fernrohr: Die Kinder stehen am Ausguck-Punkt, halten das iPhone quer und schauen sich um. Zeigt die Rückkamera in die eingemessene Richtung, wird das Bild scharf. Nach 3,5 s erscheint das Rätselbild mit dem Hinweis auf das Schlüssel-Versteck.
 
 Technischer Hintergrund: `DECISION_MAP.md` B-11 bis B-13, Code in `fernrohr.js`.
 
@@ -15,7 +15,8 @@ Technischer Hintergrund: `DECISION_MAP.md` B-11 bis B-13, Code in `fernrohr.js`.
 | Aktiv wenn | aktuelles Ziel hat „Wasserturm“ im Namen **und** Abstand < 10 m (wieder gesperrt ab 40 m) – oder die Station wurde per Notfall-Knopf / „Aktuelle Station als erreicht zählen“ als erreicht markiert |
 | Quer / hochkant | erkannt über die Lage des Handys, funktioniert auch mit Ausrichtungssperre |
 | Unschärfe | > 60° Abweichung voll, 60°–20° linear, < 20° scharf |
-| Treffer | < 20° für 1 s → Ton, Haptik (falls iOS mitspielt), Rätselbild |
+| Treffer | < 20° für 3,5 s → Ton, Haptik (falls iOS mitspielt), Rätselbild |
+| Fortschritt | ein leuchtender Ring in der dunklen Rille des Messingrands füllt sich beim Draufhalten; wer wegschwenkt, startet von vorn |
 | Rätselbild | bleibt, bis das Handy wieder hochkant ist; danach neue Suche möglich |
 | Ohne Kamera | schwarzer Grund mit Messingrand, ein Nebel zeigt die Nähe zur Richtung, Treffer funktioniert |
 | Ohne Kompass | Hinweis „Kompass neu kalibrieren – Handy kurz flach halten“ |
@@ -36,7 +37,7 @@ Voraussetzung: App über https://spawnyzn.github.io/piratenkompass/ geöffnet (n
    - Weicht es deutlich ab (z. B. um 90° oder 180°), bitte Bescheid geben – dann stimmt die Annahme über die iOS-Winkel nicht.
 2. **Fernrohr freischalten.** Bei Station 4 (Wasserturm) „Kurs setzen“, dann „Aktuelle Station als erreicht zählen“ (ersetzt die 10 m). Schriftrolle mit „Hier noch umschauen“ schließen.
 3. **Einmessen.** Logbuch → „Aktuelle Richtung als Fernrohr-Ziel speichern“ → 3 s lang mit dem Fernrohr auf einen Gegenstand im Zimmer zielen. Danach öffnet sich das Logbuch wieder und zeigt den Wert in Grad. Beim ersten Mal fragt Safari nach der Kamera → erlauben.
-4. **Suchen.** Logbuch schließen, Handy **quer und aufrecht** halten → Fernrohr fährt aus. Wegdrehen → verschwommen. Langsam auf den Gegenstand drehen → wird scharf, nach 1 s: Glocke, evtl. Haptik, Rätselbild.
+4. **Suchen.** Logbuch schließen, Handy **quer und aufrecht** halten → Fernrohr fährt aus. Wegdrehen → verschwommen. Langsam auf den Gegenstand drehen → wird scharf, nach 3,5 s ruhig Halten: Glocke, evtl. Haptik, Rätselbild.
 5. **Beide Querrichtungen.** Einmal nach links, einmal nach rechts gedreht testen: Treffer muss in derselben Richtung kommen, Bild und Text müssen aufrecht stehen.
 6. **Mit und ohne Ausrichtungssperre** (Kontrollzentrum) wiederholen.
 7. **Hochkant** drehen → Kompass ist zurück. Wieder quer → neue Suche, Rätselbild zunächst weg.
@@ -48,7 +49,7 @@ Voraussetzung: App über https://spawnyzn.github.io/piratenkompass/ geöffnet (n
 
 1. Station 4 als Ziel, zum Turm gehen: unter 10 m darf das Fernrohr beim Querhalten erscheinen, weiter weg nicht.
 2. Genau auf den Ausguck-Punkt stellen, **Einmessen** (siehe A.3) und dabei aufs Versteck zielen. Turm, Zaun und Autos sind damit eingerechnet.
-3. Ein paar Schritte vom Punkt weg und zurück, Suche wie ein Kind durchspielen. Ist es zu leicht/schwer, Rückmeldung geben (Korridor ±20° und 1 s sind einstellbar).
+3. Ein paar Schritte vom Punkt weg und zurück, Suche wie ein Kind durchspielen. Ist es zu leicht/schwer, Rückmeldung geben (Korridor ±20° und 3,5 s sind einstellbar).
 4. Spinnt das GPS am Turm (kein Fernrohr trotz Stehen am Punkt): Messingkappe in der Kompassmitte 2 s drücken – schaltet das Fernrohr frei.
 
 ### C. Am Rechner
