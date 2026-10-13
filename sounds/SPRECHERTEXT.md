@@ -24,6 +24,8 @@ Jede Datei ist optional: Was fehlt, wird einfach übersprungen. Gibt es mehrere 
 | `ankunft-3.mp3` | (Variante) | [laughs] Bei Neptuns Bart, ihr seid die besten Piraten der sieben Weltmeere! |
 | `finale.mp3` | am letzten Ziel, wenn die Truhe aufgeht | [excited] Arrr! X markiert die Stelle! Genau hier, unter euren Füßen, liegt der Schatz vergraben. Schnappt euch die Schaufeln und grabt ihn aus, ihr Landratten! |
 
+| `fernrohr.mp3` | Treffer im Fernrohr am Wasserturm (fehlt sie, läutet die Schiffsglocke) | [shouts] Land in Sicht! Was seht ihr da im Fernrohr, Mannschaft? |
+
 ## Hinweise pro Station (optional)
 
 Wird direkt nach dem Ankunfts-Schnipsel abgespielt. Die Nummer entspricht der Reihenfolge im Logbuch (Station 1, 2, 3 …).

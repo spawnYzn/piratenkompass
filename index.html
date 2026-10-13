@@ -319,6 +319,20 @@
       </section>
 
       <section>
+        <h3>Fernrohr (Wasserturm)</h3>
+        <p class="fine" id="scopeInfo"></p>
+        <p class="fine" id="scopeLive"></p>
+        <button type="button" class="btn primary small" id="scopeCalib">Aktuelle Richtung als Fernrohr-Ziel speichern</button>
+        <p class="fine">Nach dem Tippen hast du 3 Sekunden: Handy wie ein Fernrohr halten und genau aufs Versteck zielen.</p>
+        <div class="row wrap scope-pic">
+          <img id="scopeThumb" alt="Rätselbild" width="64" height="64">
+          <label class="btn small file-btn">Rätselbild wählen<input type="file" id="scopeFile" accept="image/*" hidden></label>
+          <button type="button" class="btn ghost small" id="scopeFileClear">Bild entfernen</button>
+        </div>
+        <p class="fine">Das Bild bleibt nur auf diesem Handy. Wichtiges in die Bildmitte legen, das Fernrohr ist rund.</p>
+      </section>
+
+      <section>
         <h3>Testen</h3>
         <p class="fine">Der Probelauf tut so, als würdet ihr aus 70 m auf das aktuelle Ziel zulaufen (ca. 35 s) – mit Glühen, Sonar, Stimme und Ankunft. Der Kompass bleibt echt: dreh dich ruhig. Danach ist alles wie vorher.</p>
         <button type="button" class="btn primary small" id="simBtn">Probelauf zum aktuellen Ziel</button>
@@ -377,6 +391,43 @@
   <div id="simBanner" class="sim-banner" hidden>
     <span>Probelauf · <span id="simDist"></span></span>
     <button type="button" id="simStop">Beenden</button>
+  </div>
+
+  <!-- Fernrohr: nur an der Station „Wasserturm“, Handy quer -->
+  <div id="scope" class="scope" hidden aria-hidden="true">
+    <video id="scopeVideo" class="scope-video" playsinline muted autoplay></video>
+    <div class="scope-content" id="scopeContent">
+      <div class="scope-wobble">
+        <div class="scope-lens">
+          <div class="scope-fog" id="scopeFog"></div>
+          <img id="scopeImg" class="scope-img" src="assets/ausguck_raetsel.png" alt="">
+          <div class="scope-cross"></div>
+          <div class="scope-vignette"></div>
+          <p id="scopeMsg" class="scope-msg" hidden></p>
+        </div>
+        <svg class="scope-ring" viewBox="-110 -110 220 220">
+          <defs>
+            <linearGradient id="gScopeBrass" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#f7df94" />
+              <stop offset=".3" stop-color="#d2a347" />
+              <stop offset=".65" stop-color="#8d6220" />
+              <stop offset="1" stop-color="#4a300e" />
+            </linearGradient>
+            <linearGradient id="gScopeBevel" x1="1" y1="1" x2="0" y2="0">
+              <stop offset="0" stop-color="#5a3b12" />
+              <stop offset=".5" stop-color="#b98a35" />
+              <stop offset="1" stop-color="#f0d488" />
+            </linearGradient>
+          </defs>
+          <circle r="105" fill="none" stroke="url(#gScopeBrass)" stroke-width="10" />
+          <circle r="102" fill="none" stroke="url(#gScopeBevel)" stroke-width="4" />
+          <circle r="110" fill="none" stroke="#2e1d08" stroke-width="1.5" />
+          <circle r="100" fill="none" stroke="#2e1d08" stroke-width="1.5" />
+          <circle r="108.5" fill="none" stroke="#fbe7a8" stroke-opacity=".4" stroke-width=".8" />
+          <g id="scopeRivets" fill="#6b4814" stroke="#f5dc92" stroke-opacity=".55" stroke-width=".6"></g>
+        </svg>
+      </div>
+    </div>
   </div>
 
   <div id="toast" class="toast" role="status"></div>

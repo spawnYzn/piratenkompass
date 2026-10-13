@@ -33,6 +33,43 @@ export function destination(a, brg, dist) {
   return { lat: deg(la2), lon: deg(lo2) };
 }
 
+// --- Fernrohr: Blickrichtung der Rückkamera, Glättung, Unschärfe ---
+
+// Kompasskurs der Rückkamera (Geräte-Rückseite, −Z) aus deviceorientation-Winkeln (W3C, Z-X'-Y'').
+// Hängt nicht davon ab, ob das Handy hochkant oder nach links/rechts quer gehalten wird.
+// Bei flach liegendem Handy zeigt die Kamera nach unten, der Wert ist dann unbrauchbar.
+export function cameraHeading(alpha, beta, gamma) {
+  const [ca, sa] = [Math.cos(rad(alpha)), Math.sin(rad(alpha))];
+  const [cb, sb] = [Math.cos(rad(beta)), Math.sin(rad(beta))];
+  const [cg, sg] = [Math.cos(rad(gamma)), Math.sin(rad(gamma))];
+  const east = -ca * sg - sa * sb * cg;
+  const north = -sa * sg + ca * sb * cg;
+  return norm(deg(Math.atan2(east, north)));
+}
+
+// Richtung, in die "oben" zeigt, als Vektor im Gerätesystem (x = rechte Kante, y = Oberkante, z = Display)
+export function upVector(beta, gamma) {
+  const cb = Math.cos(rad(beta));
+  return { x: -cb * Math.sin(rad(gamma)), y: Math.sin(rad(beta)), z: cb * Math.cos(rad(gamma)) };
+}
+
+// Mittelwert von Winkeln über den Einheitskreis (350° und 10° ergeben 0°, nicht 180°)
+export function circularMean(angles) {
+  let x = 0;
+  let y = 0;
+  for (const a of angles) { x += Math.cos(rad(a)); y += Math.sin(rad(a)); }
+  if (!angles.length || Math.hypot(x, y) < 1e-9) return null;
+  return norm(deg(Math.atan2(y, x)));
+}
+
+// Unschärfe in px für eine Abweichung in Grad: über 60° voll, darunter linear, unter 20° scharf
+export function scopeBlur(dev, max = 14) {
+  const d = Math.abs(dev);
+  if (d >= 60) return max;
+  if (d <= 20) return 0;
+  return (max * (d - 20)) / 40;
+}
+
 const DIRS = ['N', 'NNO', 'NO', 'ONO', 'O', 'OSO', 'SO', 'SSO', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
 export const dirName = (h) => DIRS[Math.round(norm(h) / 22.5) % 16];
 
@@ -108,7 +145,8 @@ export function encodeHunt(h) {
     x: h.secret ? 1 : 0,
     s: h.stations.map((st) => {
       const a = [st.name, +st.lat.toFixed(6), +st.lon.toFixed(6)];
-      if (st.note) a.push(st.note);
+      if (st.note || st.scope != null) a.push(st.note || '');
+      if (st.scope != null) a.push(+(+st.scope).toFixed(1)); // Fernrohr-Zielrichtung
       return a;
     }),
   };
@@ -125,7 +163,12 @@ export function decodeHunt(str) {
     const o = JSON.parse(new TextDecoder().decode(bytes));
     if (!o || !Array.isArray(o.s)) return null;
     const stations = o.s
-      .map((a) => ({ name: String(a[0] || ''), lat: +a[1], lon: +a[2], note: a[3] ? String(a[3]) : '' }))
+      .map((a) => {
+        const st = { name: String(a[0] || ''), lat: +a[1], lon: +a[2], note: a[3] ? String(a[3]) : '' };
+        const sc = a[4] == null ? NaN : +a[4];
+        if (Number.isFinite(sc)) st.scope = sc >= 0 && sc < 360 ? sc : norm(sc);
+        return st;
+      })
       .filter((st) => validLatLon(st.lat, st.lon));
     return { title: String(o.t || 'Schatzsuche'), radius: +o.r || 15, secret: !!o.x, stations };
   } catch {

@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { destination, distance, bearing, angleDiff, dirName, parseCoords, encodeHunt, decodeHunt, formatDistance } from '../geo.js';
+import {
+  destination, distance, bearing, angleDiff, dirName, parseCoords, encodeHunt, decodeHunt, formatDistance,
+  cameraHeading, upVector, circularMean, scopeBlur,
+} from '../geo.js';
 
 const near = (a, b, eps, msg) => assert.ok(Math.abs(a - b) <= eps, `${msg ?? ''} ${a} ≉ ${b}`);
 
@@ -59,7 +62,7 @@ test('Koordinaten-Formate', () => {
 
 test('Schatzkarte teilen: Hin- und Rückweg mit Umlauten', () => {
   const h = {
-    title: "Käpt'n Henrys Jagd",
+    title: "Käpt'n Hooks Jagd",
     radius: 20,
     secret: true,
     stations: [
@@ -92,3 +95,55 @@ test('Zielpunkt: Hin und zurück', () => {
     near(bearing(o, p), brg, 0.05, `Peilung ${brg}`);
   }
 });
+
+test('Schatzkarte teilen: Fernrohr-Richtung kommt mit, auch ohne Hinweis', () => {
+  const h = {
+    title: 'Ausguck', radius: 15, secret: false,
+    stations: [
+      { name: 'Turm', lat: 49.38, lon: 11.11, note: '', scope: 123.44 },
+      { name: 'Eiche', lat: 49.39, lon: 11.12, note: 'Astgabel' },
+    ],
+  };
+  const d = decodeHunt(encodeHunt(h));
+  assert.equal(d.stations[0].note, '');
+  assert.equal(d.stations[0].scope, 123.4);
+  assert.equal(d.stations[1].note, 'Astgabel');
+  assert.equal(d.stations[1].scope, undefined);
+});
+
+test('Rückkamera-Kurs: hochkant und quer zeigen dieselbe Richtung', () => {
+  // hochkant aufrecht, alpha = 0 → Kamera schaut nach Norden
+  near(cameraHeading(0, 90, 0), 0, 1e-6, 'hochkant Nord');
+  // alpha zählt gegen den Uhrzeigersinn: 90 → Westen
+  near(cameraHeading(90, 90, 0), 270, 1e-6, 'hochkant West');
+  // quer, linke Kante oben (gamma 90) bzw. rechte Kante oben (gamma −90), beide nach Osten
+  near(cameraHeading(180, 0, 90), 90, 1e-6, 'quer links oben');
+  near(cameraHeading(0, 0, -90), 90, 1e-6, 'quer rechts oben');
+  // leicht nach oben gekippt ändert den Kurs nicht
+  near(cameraHeading(0, 0, -70), 90, 1e-6, 'quer gekippt');
+});
+
+test('Oben-Vektor erkennt Hoch- und Querformat', () => {
+  near(upVector(90, 0).y, 1, 1e-9, 'hochkant');
+  near(upVector(0, 90).x, -1, 1e-9, 'linke Kante oben');
+  near(upVector(0, -90).x, 1, 1e-9, 'rechte Kante oben');
+  near(upVector(0, 0).z, 1, 1e-9, 'flach');
+});
+
+test('Winkelmittel über 0/360 hinweg', () => {
+  near(norm0(circularMean([350, 10])), 0, 1e-9);
+  near(circularMean([80, 100]), 90, 1e-9);
+  assert.equal(circularMean([]), null);
+  assert.equal(circularMean([0, 180]), null);
+});
+
+test('Fernrohr-Unschärfe: voll über 60°, linear bis 20°, darunter scharf', () => {
+  assert.equal(scopeBlur(180), 14);
+  assert.equal(scopeBlur(60), 14);
+  assert.equal(scopeBlur(40), 7);
+  assert.equal(scopeBlur(-40), 7);
+  assert.equal(scopeBlur(20), 0);
+  assert.equal(scopeBlur(5), 0);
+});
+
+function norm0(a) { return a > 180 ? a - 360 : a; }

@@ -636,3 +636,122 @@ textarea { resize: vertical; }
   background: #f6e7c1;
   color: var(--ink);
 }
+
+/* ---------- Fernrohr (Station Wasserturm, Handy quer) ---------- */
+
+.scope {
+  --d: min(84vmin, 620px);
+  position: fixed;
+  inset: 0;
+  z-index: 110; /* über dem „hochkant halten“-Hinweis */
+  overflow: hidden;
+  background: #000;
+  opacity: 0;
+  transition: opacity .3s ease-out;
+}
+.scope.open { opacity: 1; }
+.scope-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.scope-content {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transform: rotate(var(--rot, 0deg));
+  transition: transform .3s ease;
+}
+.scope-wobble {
+  display: grid;
+  place-items: center;
+  animation: scope-wobble 5.5s ease-in-out infinite alternate;
+}
+.scope-lens, .scope-ring {
+  grid-area: 1 / 1;
+  transform: scale(.45);
+  transition: transform .45s cubic-bezier(.2, .9, .25, 1.05);
+}
+.scope.open .scope-lens, .scope.open .scope-ring { transform: scale(1); }
+.scope-lens {
+  position: relative;
+  width: var(--d);
+  height: var(--d);
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 0 150vmax #000; /* außerhalb des Kreises schwarz */
+}
+.scope-ring {
+  width: calc(var(--d) * 1.1);
+  height: calc(var(--d) * 1.1);
+  pointer-events: none;
+  filter: drop-shadow(0 0 10px rgba(0, 0, 0, .8));
+}
+.scope-fog {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(205, 212, 214, .75) 0%, rgba(160, 168, 170, .55) 70%);
+  opacity: 0;
+}
+.scope-vignette {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 52%, rgba(0, 0, 0, .25) 75%, rgba(0, 0, 0, .7) 100%);
+  pointer-events: none;
+}
+.scope-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.12);
+  transition: opacity .7s ease-out, transform .9s cubic-bezier(.2, .8, .2, 1);
+}
+.scope.hit .scope-img { opacity: 1; transform: scale(1); }
+.scope-cross { display: none; }
+.scope.calib .scope-cross {
+  display: block;
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(240, 210, 130, .8), rgba(240, 210, 130, .8)) center / 2px 36% no-repeat,
+    linear-gradient(rgba(240, 210, 130, .8), rgba(240, 210, 130, .8)) center / 36% 2px no-repeat;
+}
+.scope-msg {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 16%;
+  margin: 0;
+  font-family: var(--f-title);
+  font-size: clamp(1.1rem, 4.6vmin, 1.7rem);
+  line-height: 1.15;
+  text-align: center;
+  color: #f6e7c1;
+  text-shadow: 0 1px 3px #000, 0 0 12px #000;
+}
+@keyframes scope-wobble {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  30% { transform: translate(1.5px, -1px) rotate(.25deg); }
+  65% { transform: translate(-1px, 1.5px) rotate(-.2deg); }
+  100% { transform: translate(.5px, .5px) rotate(.1deg); }
+}
+/* iOS-18-Haptik-Trick: Schalter muss im DOM, aber unsichtbar sein */
+.haptic-trick { position: fixed; left: -100px; top: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+.scope-pic { align-items: center; }
+.scope-pic img {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--brass);
+  background: #000;
+}
+.file-btn { display: inline-block; cursor: pointer; }

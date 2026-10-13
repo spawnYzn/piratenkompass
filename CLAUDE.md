@@ -4,7 +4,7 @@ Leitfaden für Claude Code (und andere Agenten) in diesem Repository.
 
 ## Was ist das hier
 
-Der „Piratenkompass“: eine Web-App für die piratige Schatzsuche zu Henrys Geburtstag quer durch Kornburg. Sie zeigt einen Messing-Kompass im Vintage-Look und den Kurs zur nächsten Station; Zielgerät ist ein iPhone in Safari. Live unter https://spawnyzn.github.io/piratenkompass/ (GitHub Pages aus `main`). Überblick für Nutzer: `README.md`.
+Der „Piratenkompass“: eine Web-App für die piratige Schatzsuche zu einem Kindergeburtstag quer durch Kornburg. Sie zeigt einen Messing-Kompass im Vintage-Look und den Kurs zur nächsten Station; Zielgerät ist ein iPhone in Safari. Live unter https://spawnyzn.github.io/piratenkompass/ (GitHub Pages aus `main`). Überblick für Nutzer: `README.md`.
 
 ## Grundregeln
 

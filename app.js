@@ -1,9 +1,13 @@
 import {
   destination, distance, bearing, norm, angleDiff, dirName, parseCoords, formatCoords, formatDistance, encodeHunt, decodeHunt,
+  cameraHeading, upVector,
 } from './geo.js';
 import {
   initAudio, pauseAudio, resumeAudio, bell, ping, cannon, setOcean, loadClips, clipCount, pickClip, playVoice, stopVoice,
 } from './audio.js';
+import {
+  scopeFrame, scopeOpen, calibrate, calibrating, stopCamera, setScopeImage, cameraState,
+} from './fernrohr.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const NS = 'http://www.w3.org/2000/svg';
@@ -16,6 +20,12 @@ const STEP_M = 0.6; // ein Kinder-Piratenschritt
 const KORNBURG = { lat: 49.3839, lon: 11.1119 };
 const LEAFLET = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/';
 const DEMO = new URLSearchParams(location.search).has('demo');
+// Fernrohr nur an der Station mit „Wasserturm“ im Namen, und erst wenn man wirklich dort steht
+const isScopeStation = (st) => !!st && /wasserturm/i.test(st.name || '');
+const SCOPE_UNLOCK_M = 10;
+const SCOPE_RELOCK_M = 40;
+const SCOPE_IMG = 'piratenkompass.raetsel';
+const SCOPE_IMG_DEFAULT = 'assets/ausguck_raetsel.png';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -40,6 +50,13 @@ const S = {
   spinAt: 0,
   lastPing: 0,
   nearSpoken: -1,
+  ori: null,         // letzte Lage { a, b, g, t } für den Kamera-Kurs
+  tilt: null,        // { b, g } für die Hoch-/Querformat-Erkennung
+  camOff: null,      // iOS: Abgleich des relativen alpha mit webkitCompassHeading
+  lastCam: null,
+  quer: DEMO && new URLSearchParams(location.search).has('quer'),
+  querSide: 1,       // +1: rechte Kante oben, −1: linke Kante oben
+  scopeUnlock: null, // { id, forced } sobald man am Wasserturm steht
 };
 
 function loadHunt() {
@@ -167,10 +184,12 @@ function clipNames() {
   const names = ['begruessung', 'nah', 'ankunft', 'finale'];
   for (let k = 1; k <= 5; k++) names.push(`begruessung-${k}`, `nah-${k}`, `ankunft-${k}`, `finale-${k}`);
   for (let k = 1; k <= Math.max(hunt.stations.length, 1); k++) names.push(`station-${k}`);
+  names.push('fernrohr');
   return names;
 }
 
 function onOrient(e) {
+  if (e.beta != null && e.gamma != null) S.tilt = { b: e.beta, g: e.gamma };
   let h = null;
   if (typeof e.webkitCompassHeading === 'number' && e.webkitCompassHeading >= 0) {
     h = e.webkitCompassHeading;
@@ -181,6 +200,47 @@ function onOrient(e) {
   if (h == null) return;
   S.raw = h;
   S.beta = e.beta;
+  trackCamera(e);
+}
+
+// Kurs der Rückkamera für das Fernrohr. iOS liefert alpha nur relativ (beliebiger Nullpunkt),
+// deshalb wird es gegen webkitCompassHeading abgeglichen, solange das Handy halbwegs flach liegt:
+// dort meinen beide dieselbe Richtung, die der Oberkante (= −alpha).
+function trackCamera(e) {
+  if (e.alpha == null || e.beta == null || e.gamma == null) return;
+  S.ori = { a: e.alpha, b: e.beta, g: e.gamma, t: performance.now() };
+  if (!(typeof e.webkitCompassHeading === 'number' && e.webkitCompassHeading >= 0)) { S.camOff = 0; return; }
+  if (Math.abs(e.beta) < 50 && Math.abs(e.gamma) < 35) {
+    const off = norm(e.webkitCompassHeading + e.alpha);
+    S.camOff = S.camOff == null ? off : norm(S.camOff + angleDiff(S.camOff, off) * 0.1);
+  }
+}
+
+function camHeading(t) {
+  if (DEMO) return heading(t);
+  const o = S.ori;
+  if (!o || S.camOff == null || performance.now() - o.t > 2000) return null;
+  // flach gehalten schaut die Kamera auf den Boden: dann den letzten guten Wert behalten
+  if (Math.abs(upVector(o.b, o.g).z) < 0.9) S.lastCam = norm(cameraHeading(o.a, o.b, o.g) + S.camOff + (+hunt.offset || 0));
+  return S.lastCam;
+}
+
+// Querformat aus der Schwerkraft-Lage, damit es auch bei gesperrter Bildschirmdrehung klappt
+function updateQuer() {
+  if (DEMO || !S.tilt) return;
+  const u = upVector(S.tilt.b, S.tilt.g);
+  const ax = Math.abs(u.x);
+  const ay = Math.abs(u.y);
+  if (!S.quer && ax > 0.7 && ax > 1.5 * ay) S.quer = true;
+  else if (S.quer && ay > 0.7 && ay > 1.5 * ax) S.quer = false;
+  if (ax > 0.5) S.querSide = Math.sign(u.x);
+}
+
+// hat sich die Oberfläche nicht mitgedreht (Drehsperre), dreht das Fernrohr seinen Inhalt selbst
+function scopeRotation() {
+  const ui = screen.orientation?.angle ?? window.orientation ?? 0;
+  if (DEMO || Math.abs(ui) % 180 === 90) return 0;
+  return S.querSide > 0 ? 90 : -90;
 }
 
 function startGeo() {
@@ -224,7 +284,7 @@ const activeStation = () => hunt.stations[hunt.current] || null;
 const roseEl = $('#rose');
 const needleEl = $('#needle');
 const heatGlow = $('#heatGlow');
-const overlayOpen = () => !$('#arrival').hidden || !$('#finale').hidden || !$('#log').hidden || !$('#mapSheet').hidden;
+const overlayOpen = () => !$('#arrival').hidden || !$('#finale').hidden || !$('#log').hidden || !$('#mapSheet').hidden || scopeOpen();
 
 function frame(t) {
   const h = heading(t);
@@ -258,6 +318,7 @@ function frame(t) {
     S.lastText = t;
     updateText(h);
   }
+  frameScope(t);
   requestAnimationFrame(frame);
 }
 
@@ -333,6 +394,13 @@ function updateText(h) {
   $('#status').innerHTML = statusHtml(h);
 
   if (st && d != null && S.pos.acc <= 40 && d <= hunt.radius && S.shownArrival !== i) showArrival();
+
+  // Fernrohr erst freigeben, wenn man am Wasserturm steht; erst deutlich weiter weg wieder sperren
+  if (isScopeStation(st) && d != null) {
+    if (d < SCOPE_UNLOCK_M && S.pos.acc <= 40) S.scopeUnlock = { id: st.id, forced: !!S.scopeUnlock?.forced };
+    else if (d > SCOPE_RELOCK_M && S.scopeUnlock?.id === st.id && !S.scopeUnlock.forced) S.scopeUnlock = null;
+  }
+  if (!$('#log').hidden) renderScopeLive(h);
 }
 
 function statusHtml(h) {
@@ -397,6 +465,7 @@ $('#finaleBtn').addEventListener('click', () => {
 // Ankunft von Hand auslösen, falls das GPS spinnt
 function forceArrival() {
   if (!activeStation()) return false;
+  if (isScopeStation(activeStation())) S.scopeUnlock = { id: activeStation().id, forced: true };
   S.shownArrival = -1;
   showArrival();
   return true;
@@ -521,6 +590,7 @@ function openLog() {
   $('#setSound').checked = !!hunt.sound;
   $('#setOcean').checked = !!hunt.ocean;
   $('#setVoice').checked = !!hunt.voice;
+  renderScopeInfo();
   $('#log').hidden = false;
 }
 $('#closeLog').addEventListener('click', () => { $('#log').hidden = true; resetForm(); });
@@ -574,6 +644,7 @@ $('#stationList').addEventListener('click', (e) => {
     case 'go':
       hunt.current = i;
       S.shownArrival = -1;
+      S.scopeUnlock = null;
       toast(`Kurs gesetzt auf Station ${i + 1}`);
       break;
     case 'up':
@@ -748,6 +819,7 @@ function applyTitle() {
 $('#restartBtn').addEventListener('click', () => {
   hunt.current = 0;
   S.shownArrival = -1;
+  S.scopeUnlock = null;
   S.nearSpoken = -1;
   saveHunt();
   renderLog();
@@ -880,6 +952,113 @@ $('#mapTake').addEventListener('click', () => {
   $('#mapSheet').hidden = true;
 });
 
+/* ------------------------------------------------------------------ Fernrohr (Station Wasserturm) */
+
+function frameScope(t) {
+  updateQuer();
+  const st = activeStation();
+  const armed = S.started && isScopeStation(st) && S.scopeUnlock?.id === st.id;
+  scopeFrame(t, {
+    active: armed && S.quer && $('#log').hidden && $('#mapSheet').hidden,
+    rotate: scopeRotation(),
+    heading: camHeading(t),
+    target: st?.scope ?? null,
+    onHit: scopeHit,
+  });
+  if (!armed && !scopeOpen() && !calibrating()) stopCamera();
+}
+
+function scopeHit() {
+  if (!hunt.sound) return;
+  playVoice(['fernrohr']).then((played) => { if (!played) bell(1); });
+}
+
+// die aktive Station, falls sie der Wasserturm ist, sonst die erste mit diesem Namen
+const scopeStation = () => (isScopeStation(activeStation()) ? activeStation() : hunt.stations.find(isScopeStation) || null);
+
+function renderScopeInfo() {
+  const st = scopeStation();
+  const n = hunt.stations.indexOf(st) + 1;
+  $('#scopeInfo').textContent = st
+    ? `${st.name} (Station ${n}) · Fernrohr-Ziel: ${st.scope == null ? 'noch nicht eingemessen' : `${Math.round(st.scope) % 360}°`}`
+    : 'Keine Station mit „Wasserturm“ im Namen – das Fernrohr bleibt aus.';
+  $('#scopeCalib').disabled = !st;
+}
+
+function renderScopeLive(h) {
+  const c = camHeading(performance.now());
+  const f = (v) => (v == null ? '—' : `${Math.round(norm(v)) % 360}°`);
+  const cam = { denied: ' · Kamera verweigert', none: ' · keine Kamera' }[cameraState()] || '';
+  setText('#scopeLive', `Jetzt: Kamera-Blick ${f(c)} · Kompass ${f(h)}${cam}`);
+}
+
+$('#scopeCalib').addEventListener('click', async () => {
+  const st = scopeStation();
+  if (!st) return;
+  $('#log').hidden = true;
+  resetForm();
+  const v = await calibrate();
+  if (v == null) {
+    toast('Kein Kompass-Signal – Handy kurz flach halten, dann nochmal');
+  } else {
+    st.scope = Math.round(v * 10) / 10;
+    saveHunt();
+    toast(`Fernrohr-Ziel gespeichert: ${Math.round(st.scope) % 360}°`);
+  }
+  openLog();
+});
+
+function loadScopeImage() {
+  let src = null;
+  try { src = localStorage.getItem(SCOPE_IMG); } catch { /* privat-Modus */ }
+  setScopeImage(src || SCOPE_IMG_DEFAULT);
+  $('#scopeThumb').src = src || SCOPE_IMG_DEFAULT;
+  $('#scopeFileClear').hidden = !src;
+}
+
+// verkleinert als JPEG, damit es in den localStorage passt
+function shrinkImage(file, max) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const im = new Image();
+    im.onload = () => {
+      const k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.round(im.naturalWidth * k);
+      c.height = Math.round(im.naturalHeight * k);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', 0.85));
+    };
+    im.onerror = () => { URL.revokeObjectURL(url); reject(new Error('kein Bild')); };
+    im.src = url;
+  });
+}
+
+$('#scopeFile').addEventListener('change', async (e) => {
+  const f = e.target.files?.[0];
+  e.target.value = '';
+  if (!f) return;
+  try {
+    localStorage.setItem(SCOPE_IMG, await shrinkImage(f, 1400));
+    loadScopeImage();
+    toast('Rätselbild gespeichert');
+  } catch {
+    toast('Bild ließ sich nicht speichern');
+  }
+});
+$('#scopeFileClear').addEventListener('click', () => {
+  try { localStorage.removeItem(SCOPE_IMG); } catch { /* egal */ }
+  loadScopeImage();
+  toast('Rätselbild entfernt');
+});
+
+document.addEventListener('visibilitychange', () => { if (document.visibilityState !== 'visible') stopCamera(); });
+if (DEMO) {
+  // am Rechner: Taste Q schaltet das Querformat um
+  document.addEventListener('keydown', (e) => { if (e.key === 'q' && e.target === document.body) S.quer = !S.quer; });
+}
+
 /* ------------------------------------------------------------------ Kleinkram & Start */
 
 let toastTimer = null;
@@ -894,12 +1073,14 @@ function toast(msg) {
 if (DEMO && !hunt.stations.length) {
   hunt.stations = [
     { id: uid(), name: 'Die alte Eiche', lat: 49.3862, lon: 11.1151, note: 'Sucht in der Astgabel nach der Flaschenpost!' },
+    { id: uid(), name: 'Wasserturm', lat: KORNBURG.lat + 0.00003, lon: KORNBURG.lon, note: 'Haltet den Kompass quer wie ein Fernrohr!', scope: 90 },
     { id: uid(), name: 'Die Brücke', lat: 49.3818, lon: 11.1080, note: '' },
   ];
 }
 
 buildCompass();
 applyTitle();
+loadScopeImage();
 $('#startBtn').addEventListener('click', start);
 checkImport();
 requestAnimationFrame(frame);
