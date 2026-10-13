@@ -20,6 +20,24 @@ Erreicht eine Kategorie die Graduierungs-Schwelle (3), wird im Durchlauf eine ha
 
 ---
 
+## M-04 — 2026-10-13 — Headless-Browser-Test zeigte „Fernrohr bleibt aus“, obwohl die App funktionierte
+
+- **Kategorie:** `test-vorbedingung`
+- **Was passierte:** Im Headless-Edge blieb das Fernrohr aus, das Kursziel schien nicht gesetzt. Tatsächlich liefen unter `--virtual-time-budget` bzw. im Hintergrund-Tab kaum `requestAnimationFrame`-Durchläufe (6 Frames in 3 s), und nach einer Code-Änderung lud das wiederverwendete Profil noch die alte `app.js` aus dem Cache.
+- **Ursache:** Die Render-Schleife der App hängt an `requestAnimationFrame`; dass der Testbrowser die überhaupt ausführt, wurde nicht geprüft, ebenso wenig, ob der aktuelle Code geladen war.
+- **Folge:** Mehrere Debug-Runden an der falschen Stelle.
+- **Regel:** Bei Headless-Tests zuerst die Vorbedingungen messen: Frame-Zähler (rAF läuft mit ~60/s?) und frischer Stand (leeres Profil pro Lauf). Echtzeit per DevTools-Protokoll statt virtueller Zeit, Hintergrund-Drosselung abschalten.
+- **Status:** offen
+
+## M-03 — 2026-10-13 — Kindername im öffentlichen Repo trotz Grundregel
+
+- **Kategorie:** `veroeffentlichung`
+- **Was passierte:** Der Vorname des Geburtstagskinds stand zusammen mit dem Ort in `CLAUDE.md`, `ROADMAP.md` und in einem Test, obwohl Grundregel 1 Kindernamen im öffentlichen Repo verbietet. Aufgefallen erst bei der Prüfung „ist etwas Problematisches öffentlich?“.
+- **Ursache:** Die Regel wurde nur auf Stationsdaten angewandt; Fließtext in Doku und Testdaten wurde vor dem Commit nicht dagegen geprüft.
+- **Folge:** Name und Ort sind in der öffentlichen Git-Historie sichtbar; im aktuellen Stand neutralisiert.
+- **Regel:** Vor jedem Commit ins öffentliche Repo den Diff (auch Doku, Testdaten, Beispieltexte) auf Personennamen, Orte und Koordinaten prüfen, z. B. `git diff --cached | grep -iE '<namen>'`.
+- **Status:** offen
+
 ## M-02 — 2026-09-30 — Öffentliches Repo ohne Rückfrage anlegen wollen
 
 - **Kategorie:** `veroeffentlichung`

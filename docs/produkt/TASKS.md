@@ -29,6 +29,12 @@ Granulare Aufgabenliste (niedrige Flughöhe), gegliedert nach den `ROADMAP.md`-P
 
 ## Phase 2 — Vorbereitung vor Ort
 
+- [x] Fernrohr-Modus für die Station Wasserturm (Kamera, Unschärfe, Treffer, Rätselbild, Einmessen) (→ B-11, B-12, B-13)  → verify: `npm test`, `?demo&quer`
+- [x] Testanleitung und offene Punkte zum Fernrohr in `docs/FERNROHR.md`
+- [ ] Fernrohr am iPhone prüfen: Kamera-Blick vs. Kompass im Logbuch, Quer links/rechts, mit und ohne Drehsperre, Haptik (→ `docs/FERNROHR.md` Test A)
+- [ ] Am Wasserturm: Fernrohr-Ziel einmessen, Rätselbild im Logbuch wählen, Ankunfts-Hinweis „Haltet den Kompass quer wie ein Fernrohr!“ eintragen (→ Test B)
+- [ ] Optional: `sounds/fernrohr.mp3` aufnehmen (sonst Schiffsglocke)
+
 - [ ] Verstecke für die Kartenstücke in Kornburg scouten
 - [ ] Stationen vor Ort per „Hier peilen (GPS)“ anlegen, Reihenfolge festlegen
 - [ ] Stations-Schnipsel `station-1.mp3` … `station-N.mp3` aufnehmen, in `sounds/` legen, prüfen und veröffentlichen
@@ -40,4 +46,5 @@ Granulare Aufgabenliste (niedrige Flughöhe), gegliedert nach den `ROADMAP.md`-P
 
 ## Querschnitt (laufend)
 
-- [ ] Bei jedem Code-Release die Cache-Version in `sw.js` erhöhen (→ B-10)
+- [ ] Bei jedem Code-Release die Cache-Version in `sw.js` erhöhen (→ B-10) · zuletzt `kompass-v4` (2026-10-13)
+- [ ] Optional: Node installieren, damit `npm test` lokal läuft

@@ -1,10 +1,10 @@
 # Roadmap — Piratenkompass
 
-**Status:** Entwurf v1.0 · **Stand:** 2026-10-04
+**Status:** Entwurf v1.1 · **Stand:** 2026-10-13
 **Grundlage:** `README.md`, `DECISION_MAP.md`, `sounds/SPRECHERTEXT.md`
 **Granulare Arbeitspakete:** `TASKS.md`
 
-Leitprinzip: Die App dient genau einem Einsatz, der piratigen Schatzsuche zu Henrys Geburtstag quer durch Kornburg. Zuerst muss sie zuverlässig funktionieren (Kompass, Kurs zur Station), dann kommt die Atmosphäre, zuletzt die Vorbereitung vor Ort. Jede Phase endet mit einem einsetzbaren Stand.
+Leitprinzip: Die App dient genau einem Einsatz, der piratigen Schatzsuche zu einem Kindergeburtstag quer durch Kornburg. Zuerst muss sie zuverlässig funktionieren (Kompass, Kurs zur Station), dann kommt die Atmosphäre, zuletzt die Vorbereitung vor Ort. Jede Phase endet mit einem einsetzbaren Stand.
 
 ---
 
@@ -40,6 +40,7 @@ Leitprinzip: Die App dient genau einem Einsatz, der piratigen Schatzsuche zu Hen
 
 - Verstecke für die Kartenstücke scouten, Stationen per GPS-Peilung anlegen
 - Stations-Schnipsel (`station-N.mp3`) aufnehmen und veröffentlichen
+- Fernrohr-Modus am Wasserturm: am iPhone prüfen, vor Ort einmessen, Rätselbild hinterlegen (→ `docs/FERNROHR.md`)
 - Probe-Runde draußen: GPS-Genauigkeit, Ankunftsradius, Kompass-Korrektur, Lautstärke
 
 **Definition of Done:** Die komplette Route ist einmal draußen erfolgreich abgelaufen worden, die Einstellungen sind justiert.
@@ -72,6 +73,6 @@ Leitprinzip: Die App dient genau einem Einsatz, der piratigen Schatzsuche zu Hen
 ```
 Phase 0  Grundkompass .......... Kompass + Kurs zur Station online
 Phase 1  Erlebnis-Features ..... Animationen, Klänge, Stimme, Probelauf
-Phase 2  Vorbereitung vor Ort .. echte Route + Stations-Schnipsel + Probe-Runde
+Phase 2  Vorbereitung vor Ort .. echte Route + Stations-Schnipsel + Fernrohr + Probe-Runde
 Phase 3  Geburtstag ............ Schatz ausgegraben
 ```

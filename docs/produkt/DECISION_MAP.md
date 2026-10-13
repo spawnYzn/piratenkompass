@@ -34,6 +34,9 @@ Status: **Akzeptiert** · **Abgelöst** · **Offen**.
 | B-08 | 2026-09-30 | Schatztruhen-Animation nur im Finale (Ausgraben im Sandkasten), Zwischenstationen behalten die Schriftrolle | Akzeptiert | Nutzer, Session 2026-09-30 |
 | B-09 | 2026-09-30 | Probelauf simuliert den Anlauf aus 70 m (2 m/s) mit echtem Kompass; der Spielfortschritt wird danach zurückgesetzt | Akzeptiert | `app.js` (`startSim`) |
 | B-10 | 2026-09-30 | Service Worker mit stale-while-revalidate; die Cache-Version in `sw.js` wird bei jedem Code-Release erhöht | Akzeptiert | `sw.js` |
+| B-11 | 2026-10-13 | Fernrohr-Modus nur an der Station mit „Wasserturm“ im Namen und erst unter 10 m Abstand (wieder gesperrt ab 40 m; die Notfall-Ankunft gibt es frei), damit es nicht schon auf dem Weg auslöst; Querformat wird aus der Schwerkraft-Lage erkannt, damit es auch mit Drehsperre klappt | Akzeptiert | `app.js` (`frameScope`), `fernrohr.js` |
+| B-12 | 2026-10-13 | Blickrichtung der Rückkamera aus der Drehmatrix (alpha/beta/gamma) statt `webkitCompassHeading`; iOS-alpha wird in flacher Haltung gegen den Kompass abgeglichen. Die Zielrichtung wird vor Ort mit demselben Weg eingemessen, Störungen durch Turm und Zaun sind so eingerechnet | Akzeptiert | `geo.js` (`cameraHeading`), `app.js` (`trackCamera`) |
+| B-13 | 2026-10-13 | Das Rätselbild liegt nur auf dem Gerät (`localStorage`), im öffentlichen Repo nur ein neutraler Platzhalter; Repo bleibt öffentlich (privat würde GitHub Pages ohne Pro abschalten, die Seite selbst wäre ohnehin öffentlich) | Akzeptiert | Nutzer, Session 2026-10-13 |
 
 ---
 

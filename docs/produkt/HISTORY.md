@@ -6,6 +6,13 @@ Neueste Einträge oben. Append-only: bestehende Einträge nicht umschreiben.
 
 ---
 
+## 2026-10-13 — Fernrohr-Modus für den Wasserturm
+
+- Neues Erlebnis an der Station Wasserturm: Handy quer halten, die Rückkamera wird zum Messing-Fernrohr; in der eingemessenen Richtung wird das Bild scharf und zeigt das Rätselbild zum Schlüssel-Versteck (→ B-11, B-12)
+- Zielrichtung wird vor Ort im Logbuch eingemessen, das Rätselbild bleibt nur auf dem Gerät (→ B-13)
+- Prüfung der öffentlichen Inhalte: Repo bleibt öffentlich, Kindername aus dem aktuellen Stand entfernt (→ M-03)
+- Testanleitung und offene Punkte in `docs/FERNROHR.md`; am iPhone noch ungetestet
+
 ## 2026-10-04 — Einführung Projekt-Tracking
 
 - Projekt-Tracking mit sechs lebenden Dokumenten unter `docs/produkt/` eingeführt (→ P-01)
