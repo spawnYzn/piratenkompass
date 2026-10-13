@@ -1,10 +1,12 @@
 // Offline-Cache: App sofort aus dem Cache, im Hintergrund aktualisieren
-const CACHE = 'kompass-v5';
+const CACHE = 'kompass-v6';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'geo.js', 'audio.js', 'fernrohr.js', 'assets/ausguck_raetsel.png', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: 'reload' umgeht den HTTP-Cache (GitHub Pages: max-age=600), sonst landen alte Dateien in der neuen Version
+  const reqs = SHELL.map((u) => new Request(u, { cache: 'reload' }));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(reqs)).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
@@ -27,7 +29,7 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.open(CACHE).then(async (cache) => {
       const cached = await cache.match(req, { ignoreSearch: own });
-      const fresh = fetch(req)
+      const fresh = fetch(own ? new Request(req.url, { cache: 'no-cache' }) : req)
         .then((res) => {
           if (res.ok || res.type === 'opaque') cache.put(req, res.clone());
           return res;

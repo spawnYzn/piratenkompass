@@ -591,7 +591,15 @@ function openLog() {
   $('#setOcean').checked = !!hunt.ocean;
   $('#setVoice').checked = !!hunt.voice;
   renderScopeInfo();
+  showVersion();
   $('#log').hidden = false;
+}
+// Name des Offline-Caches = ausgelieferte Version (siehe sw.js)
+function showVersion() {
+  if (!('caches' in window)) { $('#appVersion').textContent = 'ohne Offline-Cache'; return; }
+  caches.keys()
+    .then((keys) => { $('#appVersion').textContent = keys.filter((k) => k.startsWith('kompass-')).join(', ') || 'ohne Offline-Cache'; })
+    .catch(() => {});
 }
 $('#closeLog').addEventListener('click', () => { $('#log').hidden = true; resetForm(); });
 
