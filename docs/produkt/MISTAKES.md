@@ -20,6 +20,15 @@ Erreicht eine Kategorie die Graduierungs-Schwelle (3), wird im Durchlauf eine ha
 
 ---
 
+## M-05 — 2026-10-13 — Neue Version kam nur halb aufs iPhone (Fortschrittsring unsichtbar)
+
+- **Kategorie:** `auslieferung`
+- **Was passierte:** Nach dem Deploy mit Fortschrittsring kam am iPhone die neue Haltezeit an, der Ring aber nicht. Im Desktop-Test und in WebKit war er sichtbar.
+- **Ursache:** Der Service Worker füllte den neuen Cache per `addAll` über den HTTP-Cache des Browsers; GitHub Pages erlaubt `max-age=600`, so landeten kurz nach dem Deploy alte und neue Dateien gemischt in der neuen Version und wurden von dort weiter ausgeliefert.
+- **Folge:** Eine Testrunde am iPhone mit falschem Stand, Fehlersuche am Ring statt am Cache.
+- **Regel:** Service-Worker-Installationen immer mit `cache: 'reload'` füllen; bei „am Gerät fehlt etwas, das im Test da ist“ zuerst die ausgelieferte Version prüfen (Logbuch → „Version“), dann erst den Code.
+- **Status:** offen
+
 ## M-04 — 2026-10-13 — Headless-Browser-Test zeigte „Fernrohr bleibt aus“, obwohl die App funktionierte
 
 - **Kategorie:** `test-vorbedingung`

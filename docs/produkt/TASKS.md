@@ -46,5 +46,5 @@ Granulare Aufgabenliste (niedrige Flughöhe), gegliedert nach den `ROADMAP.md`-P
 
 ## Querschnitt (laufend)
 
-- [ ] Bei jedem Code-Release die Cache-Version in `sw.js` erhöhen (→ B-10) · zuletzt `kompass-v4` (2026-10-13)
+- [ ] Bei jedem Code-Release die Cache-Version in `sw.js` erhöhen (→ B-10) · zuletzt `kompass-v6` (2026-10-13); nach dem Deploy im Logbuch unter „Version“ prüfen
 - [ ] Optional: Node installieren, damit `npm test` lokal läuft
