@@ -34,10 +34,14 @@ Granulare Aufgabenliste (niedrige Flughöhe), gegliedert nach den `ROADMAP.md`-P
 - [ ] Fernrohr am iPhone prüfen: Kamera-Blick vs. Kompass im Logbuch, Quer links/rechts, mit und ohne Drehsperre, Haptik (→ `docs/FERNROHR.md` Test A)
 - [ ] Am Wasserturm: Fernrohr-Ziel einmessen, Rätselbild im Logbuch wählen, Ankunfts-Hinweis „Haltet den Kompass quer wie ein Fernrohr!“ eintragen (→ Test B)
 - [ ] Optional: `sounds/fernrohr.mp3` aufnehmen (sonst Schiffsglocke)
+- [x] Regiepult für Rotbarts Ansagen und Passwortfeld am Schloss (→ B-15, B-17)  → verify: `?demo`, Logbuch → Regiepult → „Ansagen prüfen“
+- [x] 14 Ansagen benannt, geprüft und veröffentlicht (→ B-16)
+- [ ] Am iPhone: Version `kompass-v7` prüfen, im WLAN „Ansagen prüfen & offline speichern“, eine Ansage über den Bluetooth-Lautsprecher testen (auch bei laufendem Kompass/Fernrohr)
+- [ ] Entscheiden, ob „Stimme“ (automatische Schnipsel) neben dem Regiepult an bleibt oder abgeschaltet wird
 
 - [ ] Verstecke für die Kartenstücke in Kornburg scouten
 - [ ] Stationen vor Ort per „Hier peilen (GPS)“ anlegen, Reihenfolge festlegen
-- [ ] Stations-Schnipsel `station-1.mp3` … `station-N.mp3` aufnehmen, in `sounds/` legen, prüfen und veröffentlichen
+- [x] ~~Stations-Schnipsel `station-1.mp3` … `station-N.mp3`~~ abgelöst durch die Regiepult-Ansagen (→ B-15)
 - [ ] Probe-Runde draußen: GPS-Genauigkeit prüfen, Ankunftsradius und ggf. Kompass-Korrektur einstellen
 
 ## Phase 3 — Einsatz am Geburtstag
@@ -46,5 +50,5 @@ Granulare Aufgabenliste (niedrige Flughöhe), gegliedert nach den `ROADMAP.md`-P
 
 ## Querschnitt (laufend)
 
-- [ ] Bei jedem Code-Release die Cache-Version in `sw.js` erhöhen (→ B-10) · zuletzt `kompass-v6` (2026-10-13); nach dem Deploy im Logbuch unter „Version“ prüfen
-- [ ] Optional: Node installieren, damit `npm test` lokal läuft
+- [ ] Bei jedem Code-Release die Cache-Version in `sw.js` erhöhen (→ B-10) · zuletzt `kompass-v7` (2026-10-15); nach dem Deploy im Logbuch unter „Version“ prüfen
+- [x] Node installiert, `npm test` läuft lokal

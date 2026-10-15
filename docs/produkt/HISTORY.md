@@ -6,6 +6,13 @@ Neueste Einträge oben. Append-only: bestehende Einträge nicht umschreiben.
 
 ---
 
+## 2026-10-15 — Rotbarts Ansagen und Regiepult
+
+- Regiepult im Logbuch: die 14 Story-Ansagen aus dem Regieheft (Ankunft/Erfolg je Station) werden von einem Erwachsenen von Hand abgespielt, unabhängig vom Kompass-Fortschritt (→ B-15)
+- Passwortfeld am Schloss: das richtige Lösungswort spielt die Erfolgs-Ansage (→ B-17)
+- Alle 14 Ansagen aufgenommen, geprüft (Benennung, Länge, gleichmäßige Lautstärke) und veröffentlicht (→ B-16)
+- Live als `kompass-v7`; Test über den Bluetooth-Lautsprecher am iPhone steht noch aus
+
 ## 2026-10-13 — Fernrohr-Modus für den Wasserturm
 
 - Neues Erlebnis an der Station Wasserturm: Handy quer halten, die Rückkamera wird zum Messing-Fernrohr; in der eingemessenen Richtung wird das Bild scharf und zeigt das Rätselbild zum Schlüssel-Versteck (→ B-11, B-12)

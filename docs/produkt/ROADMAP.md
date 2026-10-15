@@ -1,6 +1,6 @@
 # Roadmap — Piratenkompass
 
-**Status:** Entwurf v1.1 · **Stand:** 2026-10-13
+**Status:** Entwurf v1.1 · **Stand:** 2026-10-15
 **Grundlage:** `README.md`, `DECISION_MAP.md`, `sounds/SPRECHERTEXT.md`
 **Granulare Arbeitspakete:** `TASKS.md`
 
@@ -39,7 +39,7 @@ Leitprinzip: Die App dient genau einem Einsatz, der piratigen Schatzsuche zu ein
 **Ziel:** Die echte Route in Kornburg steht in der App, inklusive Hinweisen pro Station.
 
 - Verstecke für die Kartenstücke scouten, Stationen per GPS-Peilung anlegen
-- Stations-Schnipsel (`station-N.mp3`) aufnehmen und veröffentlichen
+- Rotbarts Ansagen pro Station über das Regiepult (erledigt, → B-15); am iPhone über den Lautsprecher testen
 - Fernrohr-Modus am Wasserturm: am iPhone prüfen, vor Ort einmessen, Rätselbild hinterlegen (→ `docs/FERNROHR.md`)
 - Probe-Runde draußen: GPS-Genauigkeit, Ankunftsradius, Kompass-Korrektur, Lautstärke
 
@@ -73,6 +73,6 @@ Leitprinzip: Die App dient genau einem Einsatz, der piratigen Schatzsuche zu ein
 ```
 Phase 0  Grundkompass .......... Kompass + Kurs zur Station online
 Phase 1  Erlebnis-Features ..... Animationen, Klänge, Stimme, Probelauf
-Phase 2  Vorbereitung vor Ort .. echte Route + Stations-Schnipsel + Fernrohr + Probe-Runde
+Phase 2  Vorbereitung vor Ort .. echte Route + Ansagen + Fernrohr + Probe-Runde
 Phase 3  Geburtstag ............ Schatz ausgegraben
 ```
