@@ -235,6 +235,16 @@ function playClip(name) {
   });
 }
 
+// lange Ansage (Regiepult): erst beim Abspielen dekodieren und danach wieder freigeben,
+// damit 14 Clips à 30 s nicht dauerhaft im Speicher liegen. Ergebnis: false, wenn die Datei fehlt.
+export async function playStory(name) {
+  if (!ctx) initAudio();
+  ctx?.resume?.();
+  tried.delete(name);
+  await loadClips([name]);
+  try { return await playClip(name); } finally { clips.delete(name); tried.delete(name); }
+}
+
 // spielt die Schnipsel nacheinander; fehlende werden übersprungen
 export async function playVoice(names) {
   await loadClips(names.filter(Boolean));

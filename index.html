@@ -260,6 +260,14 @@
     </header>
     <div class="sheet-body">
       <section>
+        <h3>Regiepult</h3>
+        <p class="fine">Rotbarts Ansagen von Hand abspielen. Das Logbuch schließt sich dabei, unten erscheint ein Knopf zum Stoppen.</p>
+        <div id="storyList" class="story-list"></div>
+        <button type="button" class="btn ghost small" id="storyCheck">Ansagen prüfen &amp; offline speichern</button>
+        <p class="fine" id="storyStatus"></p>
+      </section>
+
+      <section>
         <h3>Stationen</h3>
         <p class="fine" id="logProgress"></p>
         <ol id="stationList" class="stations"></ol>
@@ -387,6 +395,23 @@
       <button id="importYes" class="btn primary">Übernehmen</button>
       <button id="importNo" class="btn ghost">Verwerfen</button>
     </div>
+  </div>
+
+  <!-- Passwort für den Kompass (Station Schloss) -->
+  <div id="pwDlg" class="overlay dialog" hidden>
+    <form class="scroll-card" id="pwForm" autocomplete="off">
+      <h2>Rotbarts Passwort</h2>
+      <p>Wie lautet das geheime Wort, Navigator?</p>
+      <input type="text" id="pwInput" class="pw-input" autocapitalize="characters" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-label="Passwort">
+      <p class="pw-msg" id="pwMsg" role="status"></p>
+      <button type="submit" class="btn primary">Eingeben</button>
+      <button type="button" class="btn ghost" id="pwCancel">Abbrechen</button>
+    </form>
+  </div>
+
+  <div id="storyBanner" class="sim-banner" hidden>
+    <span>🔊 Rotbart spricht …</span>
+    <button type="button" id="storyStop">Stopp</button>
   </div>
 
   <div id="simBanner" class="sim-banner" hidden>

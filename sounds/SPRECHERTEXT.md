@@ -40,6 +40,29 @@ Wird direkt nach dem Ankunfts-Schnipsel abgespielt. Die Nummer entspricht der Re
 
 Wichtig: Werden die Stationen im Logbuch umsortiert, passen die Nummern nicht mehr. Dann die Dateien umbenennen.
 
+## Rotbarts Ansagen (Regiepult)
+
+Lange Ansagen (15–30 s), die ein Erwachsener im Logbuch unter **Regiepult** von Hand abspielt. Sie laufen unabhängig vom Kompass-Fortschritt und auch dann, wenn „Stimme“ in den Einstellungen aus ist. Die Texte stehen im privaten Regieheft, nicht hier.
+
+| Datei | Station | Wann |
+|---|---|---|
+| `01_start_ankunft.mp3` | Start | Flaschenpost gefunden |
+| `02_start_erfolg.mp3` | Start | Kartenteil 1 herausgeholt |
+| `03_sportplatz_ankunft.mp3` | Station 1 | Ankunft |
+| `04_sportplatz_erfolg.mp3` | Station 1 | Rätsel gelöst |
+| `05_schuetzenhaus_ankunft.mp3` | Station 2 | Ankunft |
+| `06_schuetzenhaus_erfolg.mp3` | Station 2 | Rätsel gelöst |
+| `07_wasserturm_ankunft.mp3` | Station 3 | Ankunft |
+| `08_wasserturm_erfolg.mp3` | Station 3 | Rätsel gelöst |
+| `09_schloss_ankunft.mp3` | Station 4 | Ankunft |
+| `10_schloss_erfolg.mp3` | Station 4 | spielt automatisch nach richtigem Passwort (Knopf „Passwortfeld“) |
+| `11_kirche_ankunft.mp3` | Station 5 | Ankunft |
+| `12_kirche_erfolg.mp3` | Station 5 | Rätsel gelöst |
+| `13_finale_ankunft.mp3` | Finale | Ankunft |
+| `14_finale_erfolg.mp3` | Finale | Truhe offen |
+
+Alle Clips auf dieselbe Lautstärke normalisieren (z. B. −1 dB). Mit „Ansagen prüfen & offline speichern“ im Regiepult lädt die App alle einmal herunter und zeigt, welche fehlen.
+
 ## Hinweis zur Veröffentlichung
 
 Der Ordner liegt im **öffentlichen** GitHub-Repo. Wer den Link kennt, kann die Schnipsel anhören. Namen von Kindern oder genaue Orte deshalb besser nur allgemein halten.

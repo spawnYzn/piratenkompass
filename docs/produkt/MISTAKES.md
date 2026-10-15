@@ -20,6 +20,15 @@ Erreicht eine Kategorie die Graduierungs-Schwelle (3), wird im Durchlauf eine ha
 
 ---
 
+## M-06 — 2026-10-15 — Stapel-Umbenennung der Ansagen um eins verrutscht
+
+- **Kategorie:** `datei-stapel`
+- **Was passierte:** Beim Umbenennen der 14 Ansagen („Audio N – …“ → `NN_…`) bekam jede Datei den Namen der vorherigen Nummer; Audio 1 landete als `x.mp3`.
+- **Ursache:** Die Shell ist zsh, deren Arrays bei 1 beginnen; die Zuordnung war für 0-basierte Bash-Arrays geschrieben. Auch die anschließende Prüfschleife scheiterte an zsh (Variablen werden nicht in Wörter zerlegt).
+- **Folge:** Kein Datenverlust, aber eine zweite Umbenennung über Zwischennamen und eine Prüfung per Dateigröße.
+- **Regel:** Stapel-Umbenennungen mit expliziter Zuordnung in Python (oder einer festen Tabelle) statt Shell-Arrays; vorher Trockenlauf ausgeben, danach gegen ein Merkmal der Originale (Größe/Prüfsumme) verifizieren.
+- **Status:** offen
+
 ## M-05 — 2026-10-13 — Neue Version kam nur halb aufs iPhone (Fortschrittsring unsichtbar)
 
 - **Kategorie:** `auslieferung`

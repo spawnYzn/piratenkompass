@@ -3,7 +3,7 @@ import {
   cameraHeading, upVector,
 } from './geo.js';
 import {
-  initAudio, pauseAudio, resumeAudio, bell, ping, cannon, setOcean, loadClips, clipCount, pickClip, playVoice, stopVoice,
+  initAudio, pauseAudio, resumeAudio, bell, ping, cannon, setOcean, loadClips, clipCount, pickClip, playVoice, stopVoice, playStory,
 } from './audio.js';
 import {
   scopeFrame, scopeOpen, calibrate, calibrating, stopCamera, setScopeImage, cameraState,
@@ -479,6 +479,113 @@ $('#nextBtn').addEventListener('click', () => {
 });
 $('#stayBtn').addEventListener('click', () => { $('#arrival').hidden = true; stopSim(); });
 
+/* ------------------------------------------------------------------ Regiepult */
+
+// Rotbarts Ansagen (sounds/<datei>.mp3), von Hand abgespielt; der Kompass-Fortschritt bleibt davon unberührt
+const STORY = [
+  { label: 'Start · Flaschenpost', clips: ['01_start_ankunft', '02_start_erfolg'] },
+  { label: 'Sportplatz', clips: ['03_sportplatz_ankunft', '04_sportplatz_erfolg'] },
+  { label: 'Schützenhaus', clips: ['05_schuetzenhaus_ankunft', '06_schuetzenhaus_erfolg'] },
+  { label: 'Wasserturm', clips: ['07_wasserturm_ankunft', '08_wasserturm_erfolg'] },
+  { label: 'Schloss', clips: ['09_schloss_ankunft', '10_schloss_erfolg'], password: true },
+  { label: 'Kirche', clips: ['11_kirche_ankunft', '12_kirche_erfolg'] },
+  { label: 'Finale', clips: ['13_finale_ankunft', '14_finale_erfolg'] },
+];
+const PASSWORD = 'KIRCHE';
+const PW_CLIP = '10_schloss_erfolg';
+const storyFound = new Map(); // Datei → true/false nach „prüfen“
+let storyRun = 0;
+
+function htmlEl(tag, attrs, parent) {
+  const e = document.createElement(tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  parent.appendChild(e);
+  return e;
+}
+
+function renderStory() {
+  const box = $('#storyList');
+  box.innerHTML = '';
+  for (const row of STORY) {
+    const div = htmlEl('div', { class: 'story-row' }, box);
+    htmlEl('span', { class: 'story-label' }, div).textContent = row.label;
+    row.clips.forEach((clip, k) => {
+      const b = htmlEl('button', { type: 'button', class: 'btn small', 'data-clip': clip }, div);
+      b.textContent = `${clip.slice(0, 2)} ${k ? 'Erfolg' : 'Ankunft'}`;
+      if (storyFound.get(clip) === false) b.classList.add('missing');
+    });
+    if (row.password) {
+      const b = htmlEl('button', { type: 'button', class: 'btn ghost small', id: 'pwOpen' }, div);
+      b.textContent = 'Passwortfeld';
+    }
+  }
+}
+
+async function playStoryClip(clip) {
+  const run = ++storyRun;
+  $('#storyBanner').hidden = false;
+  const played = await playStory(clip);
+  if (run !== storyRun) return; // inzwischen eine andere Ansage gestartet
+  $('#storyBanner').hidden = true;
+  if (!played) toast(`Ansage ${clip}.mp3 fehlt im Ordner sounds/`);
+}
+
+$('#storyList').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  $('#log').hidden = true;
+  resetForm();
+  if (b.id === 'pwOpen') openPassword();
+  else playStoryClip(b.dataset.clip);
+});
+$('#storyStop').addEventListener('click', () => {
+  storyRun++;
+  stopVoice();
+  $('#storyBanner').hidden = true;
+});
+
+// lädt alle Ansagen einmal, damit sie im Offline-Cache liegen, und markiert fehlende
+$('#storyCheck').addEventListener('click', async () => {
+  const all = STORY.flatMap((r) => r.clips);
+  const status = $('#storyStatus');
+  status.textContent = 'Prüfe …';
+  await Promise.all(all.map(async (c) => {
+    try { storyFound.set(c, (await fetch(`sounds/${c}.mp3`)).ok); } catch { storyFound.set(c, false); }
+  }));
+  const missing = all.filter((c) => !storyFound.get(c));
+  status.textContent = missing.length
+    ? `${all.length - missing.length} von ${all.length} da. Es fehlen: ${missing.map((c) => c.slice(0, 2)).join(', ')}`
+    : `Alle ${all.length} Ansagen da und offline gespeichert.`;
+  renderStory();
+});
+
+function openPassword() {
+  $('#pwInput').value = '';
+  $('#pwMsg').textContent = '';
+  $('#pwDlg').hidden = false;
+  setTimeout(() => $('#pwInput').focus(), 50);
+}
+
+$('#pwForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const v = $('#pwInput').value.toUpperCase().replace(/[^A-ZÄÖÜ]/g, '');
+  if (!v) return;
+  if (v !== PASSWORD) {
+    const msg = $('#pwMsg');
+    msg.textContent = 'Arrr, das ist nicht mein Passwort!';
+    msg.classList.remove('shake');
+    void msg.offsetWidth;
+    msg.classList.add('shake');
+    $('#pwInput').select();
+    return;
+  }
+  $('#pwInput').blur();
+  $('#pwDlg').hidden = true;
+  if (hunt.sound) bell(2);
+  setTimeout(() => playStoryClip(PW_CLIP), 900);
+});
+$('#pwCancel').addEventListener('click', () => { $('#pwDlg').hidden = true; });
+
 /* ------------------------------------------------------------------ Probelauf */
 
 // Simuliert, dass man aus 70 m auf die aktuelle Station zuläuft (Ziel liegt anfangs genau voraus).
@@ -591,6 +698,7 @@ function openLog() {
   $('#setOcean').checked = !!hunt.ocean;
   $('#setVoice').checked = !!hunt.voice;
   renderScopeInfo();
+  renderStory();
   showVersion();
   $('#log').hidden = false;
 }
