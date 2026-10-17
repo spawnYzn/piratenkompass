@@ -36,7 +36,8 @@ Granulare Aufgabenliste (niedrige Flughöhe), gegliedert nach den `ROADMAP.md`-P
 - [ ] Optional: `sounds/fernrohr.mp3` aufnehmen (sonst Schiffsglocke)
 - [x] Regiepult für Rotbarts Ansagen und Passwortfeld am Schloss (→ B-15, B-17)  → verify: `?demo`, Logbuch → Regiepult → „Ansagen prüfen“
 - [x] 14 Ansagen benannt, geprüft und veröffentlicht (→ B-16)
-- [ ] Am iPhone: Version `kompass-v7` prüfen, im WLAN „Ansagen prüfen & offline speichern“, eine Ansage über den Bluetooth-Lautsprecher testen (auch bei laufendem Kompass/Fernrohr)
+- [~] Am iPhone: Regiepult erreichbar (bestätigt 2026-10-16); offen: eine Ansage über den Bluetooth-Lautsprecher testen (auch bei laufendem Kompass/Fernrohr)
+- [ ] Nach `kompass-v8`: im WLAN erneut „Ansagen prüfen & offline speichern“ und die neue Ansage 2 anspielen
 - [ ] Entscheiden, ob „Stimme“ (automatische Schnipsel) neben dem Regiepult an bleibt oder abgeschaltet wird
 
 - [ ] Verstecke für die Kartenstücke in Kornburg scouten

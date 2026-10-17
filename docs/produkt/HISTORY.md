@@ -6,6 +6,11 @@ Neueste Einträge oben. Append-only: bestehende Einträge nicht umschreiben.
 
 ---
 
+## 2026-10-17 — Neue Fassung von Ansage 2
+
+- Ansage 2 (Start, Flaschenpost gelöst) durch eine neu vertonte Fassung ersetzt; Lautstärke passt zu den übrigen Ansagen
+- Regiepult am iPhone erfolgreich aufgerufen; live als `kompass-v8`
+
 ## 2026-10-15 — Rotbarts Ansagen und Regiepult
 
 - Regiepult im Logbuch: die 14 Story-Ansagen aus dem Regieheft (Ankunft/Erfolg je Station) werden von einem Erwachsenen von Hand abgespielt, unabhängig vom Kompass-Fortschritt (→ B-15)
